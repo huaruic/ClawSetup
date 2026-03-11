@@ -57,7 +57,7 @@ export default function DonePage() {
   }
 
   return (
-    <SetupShell currentStep={5} status={t('done.statusComplete')}>
+    <SetupShell currentStep={6} status={t('done.statusComplete')}>
       <h1 className="text-2xl font-semibold tracking-tight">{t('done.title')}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{copy.description}</p>
 

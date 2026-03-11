@@ -54,15 +54,16 @@ export async function POST(req: Request) {
 
   const command = args.join(' ');
 
-  const task = createTask('onboard');
+  const task = createTask('openclaw_onboard');
   task.status = 'running';
-  logTask(task, 'Running OpenClaw onboarding...');
+  logTask(task, 'Starting OpenClaw onboarding...');
 
   void (async () => {
     try {
-      const r = await runShell(command);
-      if (r.stdout) logTask(task, r.stdout);
-      if (r.stderr) logTask(task, r.stderr);
+      logTask(task, `Running: ${command}`);
+      const onboardResult = await runShell(command);
+      if (onboardResult.stdout) logTask(task, onboardResult.stdout);
+      if (onboardResult.stderr) logTask(task, onboardResult.stderr);
 
       if (provider.id !== 'custom' && normalizedApiKey) {
         const result = applyOpenClawProviderSelection({
@@ -76,17 +77,22 @@ export async function POST(req: Request) {
         }
       }
 
+      logTask(task, 'Running: openclaw gateway status');
+      const statusResult = await runShell('openclaw gateway status');
+      if (statusResult.stdout) logTask(task, statusResult.stdout);
+      if (statusResult.stderr) logTask(task, statusResult.stderr);
+
       task.status = 'success';
-      logTask(task, 'Onboarding completed successfully.');
+      logTask(task, 'OpenClaw onboarding completed successfully.');
     } catch (err: unknown) {
       task.status = 'failed';
       if (typeof err === 'object' && err !== null) {
         const execError = err as { shortMessage?: string; message?: string; stdout?: string; stderr?: string };
-        task.error = execError.shortMessage || execError.message || 'Onboarding failed';
+        task.error = execError.shortMessage || execError.message || 'OpenClaw onboarding failed';
         if (execError.stdout) logTask(task, execError.stdout);
         if (execError.stderr) logTask(task, execError.stderr);
       } else {
-        task.error = 'Onboarding failed';
+        task.error = 'OpenClaw onboarding failed';
       }
       logTask(task, `Error: ${task.error}`);
     }

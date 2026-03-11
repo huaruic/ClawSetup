@@ -2,35 +2,26 @@ import { NextResponse } from 'next/server';
 import { commandExists } from '@/lib/shell';
 
 export async function POST() {
-  const checks: Array<{ key: string; pass: boolean; message: string; suggestion?: string; action?: string }> = [];
+  const checks: Array<{ key: string; pass: boolean; message: string; suggestion?: string }> = [];
 
   const hasNode = await commandExists('node');
   checks.push({
     key: 'node',
     pass: hasNode,
     message: hasNode ? 'Node detected' : 'Node not found',
-    ...(!hasNode && { suggestion: 'Install Node.js from https://nodejs.org/', action: 'install_node' }),
+    ...(!hasNode && { suggestion: 'Install Node.js from https://nodejs.org/' }),
   });
 
-  const hasOpenClaw = await commandExists('openclaw');
+  const hasNpm = await commandExists('npm');
   checks.push({
-    key: 'openclaw',
-    pass: hasOpenClaw,
-    message: hasOpenClaw ? 'OpenClaw detected' : 'OpenClaw not found',
-    ...(!hasOpenClaw && { suggestion: 'Click "Install OpenClaw" to install automatically', action: 'install_openclaw' }),
-  });
-
-  const hasNpx = await commandExists('npx');
-  checks.push({
-    key: 'npx',
-    pass: hasNpx,
-    message: hasNpx ? 'npx detected' : 'npx not found',
-    ...(!hasNpx && { suggestion: 'npx comes with Node.js. Please install Node.js first.', action: 'install_node' }),
+    key: 'npm',
+    pass: hasNpm,
+    message: hasNpm ? 'npm detected' : 'npm not found',
+    ...(!hasNpm && { suggestion: 'npm comes with Node.js. Please install Node.js first.' }),
   });
 
   return NextResponse.json({
     ok: checks.every((c) => c.pass),
     checks,
-    nextAction: hasOpenClaw ? 'install_feishu_plugin' : 'install_openclaw',
   });
 }

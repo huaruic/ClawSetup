@@ -286,7 +286,7 @@ export default function FeishuPage() {
     }`;
 
   return (
-    <SetupShell currentStep={4} status={statusText}>
+    <SetupShell currentStep={5} status={statusText}>
       <h1 className="text-2xl font-semibold tracking-tight">{t('feishu.title')}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t('feishu.description')}</p>
 

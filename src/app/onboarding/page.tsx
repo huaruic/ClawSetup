@@ -54,9 +54,9 @@ export default function OnboardingPage() {
   const t = useT();
   const [pipeline, setPipeline] = useState<PipelineStep[]>([
     {
-      label: t('verify.steps.onboarding'),
+      label: t('verify.steps.setupCli'),
       status: 'running',
-      detail: t('verify.onboardingChecking'),
+      detail: t('verify.setupChecking'),
     },
   ]);
   const [running, setRunning] = useState(true);
@@ -114,9 +114,9 @@ export default function OnboardingPage() {
     setAllPassed(false);
     setPipeline([
       {
-        label: t('verify.steps.onboarding'),
+        label: t('verify.steps.setupCli'),
         status: 'running',
-        detail: t('verify.onboardingChecking'),
+        detail: t('verify.setupChecking'),
       },
     ]);
 
@@ -142,7 +142,7 @@ export default function OnboardingPage() {
     }));
 
     try {
-      addLog(t('verify.onboardingChecking'));
+      addLog(t('verify.setupChecking'));
       const statusResponse = await fetch('/api/runtime/status');
       const statusData = await statusResponse.json() as RuntimeStatusResponse;
       appendRuntimeOutput(addLog, t('verify.initialStatusLog'), statusData);
@@ -152,22 +152,22 @@ export default function OnboardingPage() {
         await fetch('/api/config/reset-channels', { method: 'POST' });
         addLog(t('verify.channelsReset'));
 
-        updateStep(0, { status: 'success', detail: t('verify.onboardingAlreadyReady') });
+        updateStep(0, { status: 'success', detail: t('verify.setupAlreadyReady') });
         setAllPassed(true);
         updateOnboardingState((current) => ({
           ...current,
           onboarding: {
             status: 'passed',
-            message: t('verify.onboardingAlreadyReady'),
+            message: t('verify.setupAlreadyReady'),
           },
         }));
         setRunning(false);
         return;
       }
 
-      addLog(statusData.summary || t('verify.onboardingNeedsSetup'));
-      updateStep(0, { status: 'running', detail: t('verify.onboardingRunning') });
-      addLog(t('verify.onboardingRunning'));
+      addLog(statusData.summary || t('verify.setupNeedsInstall'));
+      updateStep(0, { status: 'running', detail: t('verify.setupRunning') });
+      addLog(t('verify.setupRunning'));
 
       const onboardResp = await fetch('/api/onboard', {
         method: 'POST',
@@ -177,13 +177,13 @@ export default function OnboardingPage() {
       const onboardData = await onboardResp.json();
 
       if (!onboardData.taskId) {
-        updateStep(0, { status: 'failed', detail: onboardData.error || t('verify.onboardingFailed') });
-        setErrorInfo({ message: onboardData.error || t('verify.onboardingFailed'), suggestion: t('verify.onboardingFailedSuggestion') });
+        updateStep(0, { status: 'failed', detail: onboardData.error || t('verify.setupFailed') });
+        setErrorInfo({ message: onboardData.error || t('verify.setupFailed'), suggestion: t('verify.setupFailedSuggestion') });
         updateOnboardingState((current) => ({
           ...current,
           onboarding: {
             status: 'failed',
-            message: onboardData.error || t('verify.onboardingFailed'),
+            message: onboardData.error || t('verify.setupFailed'),
           },
         }));
         setRunning(false);
@@ -193,13 +193,13 @@ export default function OnboardingPage() {
       if (onboardData.status !== 'success') {
         const result = await waitForTask(onboardData.taskId);
         if (result === 'failed') {
-          updateStep(0, { status: 'failed', detail: t('verify.onboardingFailed') });
-          setErrorInfo({ message: t('verify.onboardingFailed'), suggestion: t('verify.onboardingFailedSuggestion') });
+          updateStep(0, { status: 'failed', detail: t('verify.setupFailed') });
+          setErrorInfo({ message: t('verify.setupFailed'), suggestion: t('verify.setupFailedSuggestion') });
           updateOnboardingState((current) => ({
             ...current,
             onboarding: {
               status: 'failed',
-              message: t('verify.onboardingFailed'),
+              message: t('verify.setupFailed'),
             },
           }));
           setRunning(false);
@@ -216,7 +216,7 @@ export default function OnboardingPage() {
         updateStep(0, { status: 'failed', detail: finalStatusData.summary || finalStatusData.error || t('verify.gatewayCheckFailed') });
         setErrorInfo({
           message: finalStatusData.summary || finalStatusData.error || t('verify.gatewayCheckFailed'),
-          suggestion: t('verify.verifyFailedSuggestion'),
+          suggestion: t('verify.setupRetrySuggestion'),
         });
         updateOnboardingState((current) => ({
           ...current,
@@ -229,7 +229,7 @@ export default function OnboardingPage() {
         return;
       }
 
-      updateStep(0, { status: 'success', detail: t('verify.onboardingDetail') });
+      updateStep(0, { status: 'success', detail: t('verify.setupDetail') });
       setAllPassed(true);
       updateOnboardingState((current) => ({
         ...current,
@@ -239,7 +239,7 @@ export default function OnboardingPage() {
         },
       }));
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : t('verify.onboardingFailed');
+      const message = error instanceof Error ? error.message : t('verify.setupFailed');
       updateStep(0, { status: 'failed', detail: message });
       setErrorInfo({ message, suggestion: t('verify.ensureServer') });
       updateOnboardingState((current) => ({
@@ -291,7 +291,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <SetupShell currentStep={3} status={statusText}>
+    <SetupShell currentStep={4} status={statusText}>
       <h1 className="text-2xl font-semibold tracking-tight">{t('verify.title')}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t('verify.description')}</p>
 
@@ -338,6 +338,7 @@ export default function OnboardingPage() {
 
       <div className="mt-6 flex items-center justify-between">
         <Link href="/provider" className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent">{t('common.back')}</Link>
+
         <div className="flex gap-2">
           {!allPassed && !running && (
             <button
