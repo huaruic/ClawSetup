@@ -1,11 +1,26 @@
 import { NextResponse } from 'next/server';
-import { runShell } from '@/lib/shell';
+import { getOpenClawGatewayReadiness } from '@/lib/openclaw-runtime';
 
 export async function GET() {
   try {
-    const r = await runShell('openclaw gateway status');
-    return NextResponse.json({ ok: true, status: r.stdout || 'running' });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, status: 'unknown', error: err?.shortMessage || err?.message || 'status_failed' });
+    const readiness = await getOpenClawGatewayReadiness();
+    return NextResponse.json({
+      ok: readiness.ready,
+      installed: readiness.installed,
+      ready: readiness.ready,
+      summary: readiness.summary,
+      status: readiness.output || readiness.summary,
+      output: readiness.output,
+    });
+  } catch (err: unknown) {
+    const error = err as { shortMessage?: string; message?: string };
+    return NextResponse.json({
+      ok: false,
+      installed: false,
+      ready: false,
+      status: 'unknown',
+      output: '',
+      error: error.shortMessage || error.message || 'status_failed',
+    });
   }
 }

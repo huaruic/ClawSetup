@@ -1,197 +1,426 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SetupShell } from '@/components/setup-shell';
-
-const API_BASE = '';
+import { useT } from '@/i18n/context';
+import { loadOnboardingState, updateOnboardingState } from '@/lib/onboarding-state';
 
 type FieldErrors = {
   appId?: string;
   appSecret?: string;
-  verificationToken?: string;
+  pairingCode?: string;
 };
 
-function validateLocally(values: { appId: string; appSecret: string; verificationToken: string }): FieldErrors {
-  const errors: FieldErrors = {};
-  if (values.appId.length < 4) errors.appId = 'App ID must be at least 4 characters';
-  if (values.appSecret.length < 6) errors.appSecret = 'App Secret must be at least 6 characters';
-  if (values.verificationToken.length < 4) errors.verificationToken = 'Verification Token must be at least 4 characters';
-  return errors;
-}
+type PairingRequest = {
+  id: string;
+  code: string;
+  createdAt: string;
+  lastSeenAt: string;
+};
 
 export default function FeishuPage() {
   const router = useRouter();
+  const t = useT();
   const [appId, setAppId] = useState('');
   const [appSecret, setAppSecret] = useState('');
-  const [verificationToken, setVerificationToken] = useState('');
+  const [pairingCode, setPairingCode] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [validated, setValidated] = useState(false);
-  const [applied, setApplied] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [connectionReady, setConnectionReady] = useState(false);
+  const [pairingApproved, setPairingApproved] = useState(false);
   const [serverError, setServerError] = useState('');
   const [loadingConfig, setLoadingConfig] = useState(true);
+  const [pairingRequest, setPairingRequest] = useState<PairingRequest | null>(null);
+  const [pairingMessage, setPairingMessage] = useState('');
+  const [connectionMessage, setConnectionMessage] = useState('');
 
-  // Load saved config on mount
+  const statusText = useMemo(() => {
+    if (loadingConfig) return t('feishu.statusLoading');
+    if (connecting) return t('feishu.statusConnecting');
+    if (approving) return t('feishu.statusApproving');
+    if (pairingApproved) return t('feishu.statusReady');
+    if (connectionReady) return t('feishu.statusWaiting');
+    return t('feishu.statusOptional');
+  }, [loadingConfig, connecting, approving, pairingApproved, connectionReady, t]);
+
+  async function loadPairingRequest() {
+    try {
+      const response = await fetch('/api/feishu/pairing', { cache: 'no-store' });
+      const data = await response.json();
+      if (data.ok) {
+        setPairingRequest(data.request ?? null);
+      }
+    } catch {
+      // Ignore polling failures
+    }
+  }
+
   useEffect(() => {
-    fetch(`${API_BASE}/api/config/preview`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.ok && data.config) {
-          if (data.config.appId) setAppId(data.config.appId);
-          // Secret fields come masked, don't fill them
-          setApplied(true);
-          setValidated(true);
+    const state = loadOnboardingState();
+    if (state.feishu.appId) {
+      setAppId(state.feishu.appId);
+    }
+    if (state.feishu.connectionReady) {
+      setConnectionReady(true);
+      setConnectionMessage(state.feishu.message ?? t('feishu.connectedMessage'));
+    }
+    if (state.feishu.status === 'passed') {
+      setPairingApproved(true);
+      setPairingMessage(state.feishu.message ?? '');
+      setLoadingConfig(false);
+      return;
+    }
+
+    fetch('/api/config/preview')
+      .then((response) => response.json())
+      .then(async (data) => {
+        if (data.ok && data.config?.appId) {
+          setAppId(data.config.appId);
+          const verifyResponse = await fetch('/api/runtime/verify', { method: 'POST' });
+          const verifyData = await verifyResponse.json();
+          if (verifyData.ok) {
+            setConnectionReady(true);
+            setConnectionMessage(t('feishu.alreadyConnected'));
+            void loadPairingRequest();
+          }
         }
       })
       .catch(() => {})
       .finally(() => setLoadingConfig(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const statusText = useMemo(() => {
-    if (loadingConfig) return 'Loading saved config...';
-    if (loading) return 'Validating...';
-    if (applied) return 'Configuration applied';
-    if (validated) return 'Validation passed';
-    if (serverError) return 'Validation failed';
-    return 'Waiting for Feishu credentials';
-  }, [loading, applied, validated, serverError, loadingConfig]);
+  useEffect(() => {
+    if (!connectionReady || pairingApproved) return;
+    void loadPairingRequest();
+    const timer = window.setInterval(() => {
+      void loadPairingRequest();
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, [connectionReady, pairingApproved]);
 
-  async function handleValidateAndApply() {
+  function validateLocally(values: { appId: string; appSecret: string }): FieldErrors {
+    const errors: FieldErrors = {};
+    if (values.appId.trim().length < 4) errors.appId = t('feishu.appIdMinLength');
+    if (values.appSecret.trim().length < 6) errors.appSecret = t('feishu.appSecretMinLength');
+    return errors;
+  }
+
+  async function handleConnect() {
     setServerError('');
     setFieldErrors({});
-    setValidated(false);
-    setApplied(false);
+    setConnectionMessage('');
+    setPairingApproved(false);
 
-    const values = { appId, appSecret, verificationToken };
+    const values = { appId, appSecret };
     const localErrors = validateLocally(values);
     if (Object.keys(localErrors).length > 0) {
       setFieldErrors(localErrors);
       return;
     }
 
-    setLoading(true);
+    setConnecting(true);
+    updateOnboardingState((current) => ({
+      ...current,
+      feishu: {
+        status: 'running',
+        appId,
+        connectionReady: false,
+        pairingApproved: false,
+      },
+      done: {
+        status: 'pending',
+      },
+    }));
     try {
-      // Step 1: validate
-      const valResp = await fetch(`${API_BASE}/api/config/feishu/validate`, {
+      const validationResponse = await fetch('/api/config/feishu/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-      const valData = await valResp.json();
-      if (!valData.ok) {
-        if (valData.errors) {
-          const mapped: FieldErrors = {};
-          if (valData.errors.appId) mapped.appId = valData.errors.appId.join(', ');
-          if (valData.errors.appSecret) mapped.appSecret = valData.errors.appSecret.join(', ');
-          if (valData.errors.verificationToken) mapped.verificationToken = valData.errors.verificationToken.join(', ');
-          setFieldErrors(mapped);
-        } else {
-          setServerError('Validation failed');
-        }
+      const validationData = await validationResponse.json();
+      if (!validationResponse.ok || !validationData.ok) {
+        setServerError(validationData.error || 'Failed to validate Feishu credentials');
         return;
       }
-      setValidated(true);
 
-      // Step 2: apply
-      const applyResp = await fetch(`${API_BASE}/api/config/apply`, {
+      const applyResponse = await fetch('/api/config/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-      const applyData = await applyResp.json();
-      if (!applyData.ok) {
-        setServerError('Failed to apply configuration');
+      const applyData = await applyResponse.json();
+      if (!applyResponse.ok || !applyData.ok) {
+        setServerError(applyData.error || 'Failed to apply Feishu configuration');
         return;
       }
-      setApplied(true);
-    } catch (e: unknown) {
-      setServerError(e instanceof Error ? e.message : 'Network error');
+
+      const verifyResponse = await fetch('/api/runtime/verify', { method: 'POST' });
+      const verifyData = await verifyResponse.json();
+      if (!verifyResponse.ok || !verifyData.ok) {
+        setServerError(verifyData.errorMessage || 'Feishu channel verification failed');
+        updateOnboardingState((current) => ({
+          ...current,
+          feishu: {
+            status: 'failed',
+            appId,
+            connectionReady: false,
+            pairingApproved: false,
+            message: verifyData.errorMessage || 'Feishu channel verification failed',
+          },
+        }));
+        return;
+      }
+
+      setConnectionReady(true);
+      setConnectionMessage(t('feishu.connectedMessage'));
+      updateOnboardingState((current) => ({
+        ...current,
+        feishu: {
+          status: 'running',
+          appId,
+          connectionReady: true,
+          pairingApproved: false,
+          message: t('feishu.connectedMessage'),
+        },
+      }));
+      void loadPairingRequest();
+    } catch (error: unknown) {
+      setServerError(error instanceof Error ? error.message : 'Failed to connect Feishu');
+      updateOnboardingState((current) => ({
+        ...current,
+        feishu: {
+          status: 'failed',
+          appId,
+          connectionReady: false,
+          pairingApproved: false,
+          message: error instanceof Error ? error.message : 'Failed to connect Feishu',
+        },
+      }));
     } finally {
-      setLoading(false);
+      setConnecting(false);
     }
   }
 
-  const fields: Array<{ label: string; key: keyof FieldErrors; value: string; setter: (v: string) => void; placeholder: string; type: string }> = [
-    { label: 'App ID', key: 'appId', value: appId, setter: setAppId, placeholder: 'cli_xxx', type: 'text' },
-    { label: 'App Secret', key: 'appSecret', value: appSecret, setter: setAppSecret, placeholder: 'Enter App Secret', type: 'password' },
-    { label: 'Verification Token', key: 'verificationToken', value: verificationToken, setter: setVerificationToken, placeholder: 'Enter Verification Token', type: 'text' },
-  ];
+  async function handleApprovePairing() {
+    setServerError('');
+    setPairingMessage('');
+
+    const code = pairingCode.trim().toUpperCase();
+    if (code.length < 4) {
+      setFieldErrors((prev) => ({ ...prev, pairingCode: t('feishu.pairingCodeMinLength') }));
+      return;
+    }
+
+    setApproving(true);
+    try {
+      const response = await fetch('/api/feishu/pairing/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        setServerError(data.error || 'Failed to approve Pairing Code');
+        return;
+      }
+
+      setPairingApproved(true);
+      setPairingMessage(data.message || 'Pairing approved!');
+      updateOnboardingState((current) => ({
+        ...current,
+        feishu: {
+          status: 'passed',
+          appId,
+          connectionReady: true,
+          pairingApproved: true,
+          message: data.message || 'Pairing approved!',
+        },
+        done: {
+          status: 'passed',
+          variant: 'feishu_connected',
+        },
+      }));
+    } catch (error: unknown) {
+      setServerError(error instanceof Error ? error.message : 'Failed to approve Pairing Code');
+      updateOnboardingState((current) => ({
+        ...current,
+        feishu: {
+          status: 'failed',
+          appId,
+          connectionReady,
+          pairingApproved: false,
+          message: error instanceof Error ? error.message : 'Failed to approve Pairing Code',
+        },
+      }));
+    } finally {
+      setApproving(false);
+    }
+  }
+
+  function handleSkip() {
+    updateOnboardingState((current) => ({
+      ...current,
+      feishu: {
+        status: 'skipped',
+        appId,
+        connectionReady: false,
+        pairingApproved: false,
+      },
+      done: {
+        status: 'passed',
+        variant: 'local_only',
+      },
+    }));
+    router.push('/done');
+  }
+
+  const inputClass = (hasError: boolean) =>
+    `h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-2 bg-background ${
+      hasError
+        ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
+        : 'border-input focus:border-ring focus:ring-ring/20'
+    }`;
 
   return (
-    <SetupShell currentStep={2} status={statusText}>
-      <h1 className="text-2xl font-semibold tracking-tight">Feishu Configuration</h1>
-      <p className="mt-2 text-sm text-slate-600">Enter the credentials from your Feishu bot application.</p>
+    <SetupShell currentStep={4} status={statusText}>
+      <h1 className="text-2xl font-semibold tracking-tight">{t('feishu.title')}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t('feishu.description')}</p>
 
-      <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-        <p className="text-sm text-blue-800">
-          Not sure how to get these credentials? Follow the{' '}
-          <a
-            href="https://www.feishu.cn/content/article/7613711414611463386"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium underline hover:text-blue-900"
+      <div className="mt-4 rounded-lg border border-border bg-muted/50 p-4">
+        <div className="text-sm font-medium">{t('feishu.step1Title')}</div>
+        <p className="mt-1 text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: t('feishu.step1Desc') }} />
+
+        <div className="mt-4 space-y-4">
+          <label className="block space-y-1">
+            <span className="text-sm font-medium">{t('feishu.appId')}</span>
+            <input
+              type="text"
+              value={appId}
+              onChange={(event) => {
+                setAppId(event.target.value);
+                setFieldErrors((prev) => ({ ...prev, appId: undefined }));
+                setConnectionReady(false);
+                setPairingApproved(false);
+              }}
+              placeholder={t('feishu.appIdPlaceholder')}
+              className={inputClass(!!fieldErrors.appId)}
+            />
+            {fieldErrors.appId && <p className="text-xs text-destructive">{fieldErrors.appId}</p>}
+          </label>
+
+          <label className="block space-y-1">
+            <span className="text-sm font-medium">{t('feishu.appSecret')}</span>
+            <input
+              type="password"
+              value={appSecret}
+              onChange={(event) => {
+                setAppSecret(event.target.value);
+                setFieldErrors((prev) => ({ ...prev, appSecret: undefined }));
+                setConnectionReady(false);
+                setPairingApproved(false);
+              }}
+              placeholder={t('feishu.appSecretPlaceholder')}
+              className={inputClass(!!fieldErrors.appSecret)}
+            />
+            {fieldErrors.appSecret && <p className="text-xs text-destructive">{fieldErrors.appSecret}</p>}
+          </label>
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={handleConnect}
+            disabled={connecting}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Feishu Bot Setup Guide
-          </a>{' '}
-          to create a Feishu app and obtain your App ID, App Secret, and Verification Token.
-        </p>
+            {connecting ? t('feishu.connecting') : connectionReady ? t('feishu.reconnectFeishu') : t('feishu.connectFeishu')}
+          </button>
+          <button
+            onClick={handleSkip}
+            className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent"
+          >
+            {t('common.skip')}
+          </button>
+        </div>
+
+        {connectionMessage && (
+          <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+            {connectionMessage}
+          </div>
+        )}
       </div>
 
-      <div className="mt-6 space-y-4">
-        {fields.map((f) => (
-          <label key={f.key} className="block space-y-1">
-            <span className="text-sm font-medium text-slate-700">{f.label}</span>
+      <div className={`mt-6 rounded-lg border p-4 ${connectionReady ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20' : 'border-border bg-muted/50 opacity-70'}`}>
+        <div className="text-sm font-medium">{t('feishu.step2Title')}</div>
+        <p className="mt-1 text-sm text-muted-foreground">{t('feishu.step2Desc')}</p>
+
+        {pairingRequest && !pairingApproved && (
+          <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+            {t('feishu.pendingCode', { code: pairingRequest.code })}
+          </div>
+        )}
+
+        <div className="mt-4 max-w-md space-y-1">
+          <label className="block space-y-1">
+            <span className="text-sm font-medium">{t('feishu.pairingCode')}</span>
             <input
-              type={f.type}
-              value={f.value}
-              onChange={(e) => {
-                f.setter(e.target.value);
-                setFieldErrors((prev) => ({ ...prev, [f.key]: undefined }));
-                setValidated(false);
-                setApplied(false);
+              type="text"
+              value={pairingCode}
+              onChange={(event) => {
+                setPairingCode(event.target.value.toUpperCase());
+                setFieldErrors((prev) => ({ ...prev, pairingCode: undefined }));
+                setPairingMessage('');
               }}
-              placeholder={f.placeholder}
-              className={`h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-2 ${
-                fieldErrors[f.key]
-                  ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-                  : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100'
-              }`}
+              disabled={!connectionReady || pairingApproved}
+              placeholder={t('feishu.pairingCodePlaceholder')}
+              className={`${inputClass(!!fieldErrors.pairingCode)} disabled:cursor-not-allowed disabled:bg-muted`}
             />
-            {fieldErrors[f.key] && <p className="text-xs text-red-600">{fieldErrors[f.key]}</p>}
+            {fieldErrors.pairingCode && <p className="text-xs text-destructive">{fieldErrors.pairingCode}</p>}
           </label>
-        ))}
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={handleApprovePairing}
+            disabled={!connectionReady || approving || pairingApproved}
+            className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {approving ? t('feishu.approving') : pairingApproved ? t('feishu.paired') : t('feishu.approvePairing')}
+          </button>
+          <button
+            onClick={() => void loadPairingRequest()}
+            disabled={!connectionReady || approving}
+            className="rounded-md border border-border px-4 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t('feishu.refresh')}
+          </button>
+        </div>
+
+        {pairingMessage && (
+          <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+            {pairingMessage}
+          </div>
+        )}
       </div>
 
       {serverError && (
-        <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{serverError}</div>
-      )}
-
-      {applied && (
-        <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-          Configuration applied successfully.
+        <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {serverError}
         </div>
       )}
 
       <div className="mt-6 flex items-center justify-between">
-        <Link href="/" className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700">Back</Link>
-        <div className="flex gap-2">
-          <button
-            onClick={handleValidateAndApply}
-            disabled={loading}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? 'Validating...' : applied ? 'Re-validate & Apply' : 'Validate & Apply'}
-          </button>
-          <button
-            onClick={() => router.push('/verify')}
-            disabled={!applied}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
+        <Link href="/onboarding" className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent">{t('common.back')}</Link>
+        <button
+          onClick={() => router.push('/done')}
+          disabled={!pairingApproved}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {t('common.done')}
+        </button>
       </div>
     </SetupShell>
   );

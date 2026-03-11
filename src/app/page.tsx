@@ -3,11 +3,12 @@
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SetupShell } from '@/components/setup-shell';
+import { useT } from '@/i18n/context';
 
 type CheckStatus = 'pending' | 'pass' | 'fail';
 
 type CheckItem = {
-  name: string;
+  nameKey: string;
   key: 'openclaw' | 'node' | 'network' | 'gateway';
   status: CheckStatus;
   detail?: string;
@@ -18,20 +19,21 @@ type CheckItem = {
 const API_BASE = '';
 
 const initialChecks: CheckItem[] = [
-  { name: 'OpenClaw CLI', key: 'openclaw', status: 'pending' },
-  { name: 'Node Runtime', key: 'node', status: 'pending' },
-  { name: 'Network Access', key: 'network', status: 'pending' },
-  { name: 'Gateway Status', key: 'gateway', status: 'pending' },
+  { nameKey: 'env.openclawCli', key: 'openclaw', status: 'pending' },
+  { nameKey: 'env.nodeRuntime', key: 'node', status: 'pending' },
+  { nameKey: 'env.networkAccess', key: 'network', status: 'pending' },
+  { nameKey: 'env.gatewayStatus', key: 'gateway', status: 'pending' },
 ];
 
 function statusBadge(status: CheckStatus) {
-  if (status === 'pass') return 'bg-emerald-100 text-emerald-700';
-  if (status === 'fail') return 'bg-rose-100 text-rose-700';
-  return 'bg-slate-100 text-slate-600';
+  if (status === 'pass') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+  if (status === 'fail') return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
+  return 'bg-muted text-muted-foreground';
 }
 
 export default function Home() {
   const router = useRouter();
+  const t = useT();
   const [checks, setChecks] = useState<CheckItem[]>(initialChecks);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,13 +45,13 @@ export default function Home() {
   const allPassed = checks.every((c) => c.status === 'pass');
 
   const statusText = useMemo(() => {
-    if (installing) return `Installing ${installing}...`;
-    if (loading) return 'Running checks...';
-    if (error) return `Check failed: ${error}`;
-    if (!hasRun) return 'Running checks...';
-    if (allPassed) return 'All checks passed';
-    return 'Checks completed with issues';
-  }, [checks, error, loading, installing, allPassed, hasRun]);
+    if (installing) return t('env.statusInstalling', { name: installing });
+    if (loading) return t('env.statusChecking');
+    if (error) return t('env.statusCheckFailed', { error });
+    if (!hasRun) return t('env.statusChecking');
+    if (allPassed) return t('env.statusAllPassed');
+    return t('env.statusIssues');
+  }, [error, loading, installing, allPassed, hasRun, t]);
 
   const runCheck = useCallback(async () => {
     setLoading(true);
@@ -73,7 +75,7 @@ export default function Home() {
 
       setChecks([
         {
-          name: 'OpenClaw CLI',
+          nameKey: 'env.openclawCli',
           key: 'openclaw',
           status: openclawCheck?.pass ? 'pass' : 'fail',
           detail: openclawCheck?.message,
@@ -81,23 +83,23 @@ export default function Home() {
           action: openclawCheck?.action,
         },
         {
-          name: 'Node Runtime',
+          nameKey: 'env.nodeRuntime',
           key: 'node',
           status: system?.hasNode ? 'pass' : 'fail',
-          detail: system?.hasNode ? `Detected ${system.nodeVersion || 'node'}` : 'Node runtime not detected',
+          detail: system?.hasNode ? t('env.detected', { version: system.nodeVersion || 'node' }) : t('env.nodeNotDetected'),
           suggestion: nodeCheck?.suggestion,
         },
         {
-          name: 'Network Access',
+          nameKey: 'env.networkAccess',
           key: 'network',
           status: systemResp.ok ? 'pass' : 'fail',
-          detail: systemResp.ok ? 'Backend reachable' : 'Cannot reach backend',
+          detail: systemResp.ok ? t('env.backendReachable') : t('env.backendUnreachable'),
         },
         {
-          name: 'Gateway Status',
+          nameKey: 'env.gatewayStatus',
           key: 'gateway',
           status: runtimeStatus?.ok ? 'pass' : 'fail',
-          detail: runtimeStatus?.ok ? 'Gateway reachable' : runtimeStatus?.error || 'Gateway status check failed',
+          detail: runtimeStatus?.summary || (runtimeStatus?.ok ? t('env.gatewayReachable') : runtimeStatus?.error || t('env.gatewayCheckFailed')),
         },
       ]);
     } catch (e: unknown) {
@@ -107,9 +109,8 @@ export default function Home() {
       setLoading(false);
       setHasRun(true);
     }
-  }, []);
+  }, [t]);
 
-  // Auto-run checks on mount
   useEffect(() => {
     runCheck();
   }, [runCheck]);
@@ -158,44 +159,45 @@ export default function Home() {
 
   return (
     <SetupShell currentStep={1} status={statusText}>
-      <h1 className="text-2xl font-semibold tracking-tight">Environment Check</h1>
-      <p className="mt-2 text-sm text-slate-600">Validating local dependencies for OpenClaw and the Feishu plugin.</p>
+      <h1 className="text-2xl font-semibold tracking-tight">{t('env.title')}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t('env.description')}</p>
 
       <div className="mt-6 space-y-3">
         {checks.map((item) => (
-          <div key={item.key} className="rounded-lg border border-slate-200 px-4 py-3">
+          <div key={item.key} className="rounded-lg border border-border px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {loading && item.status === 'pending' && (
-                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
                 )}
-                <span className="text-sm">{item.name}</span>
+                <span className="text-sm">{t(item.nameKey)}</span>
               </div>
-              <span className={`rounded-md px-2 py-1 text-xs ${statusBadge(item.status)}`}>{item.status}</span>
+              <span className={`rounded-md px-2 py-1 text-xs ${statusBadge(item.status)}`}>
+                {t(`common.${item.status === 'pass' ? 'passed' : item.status === 'fail' ? 'failed' : 'pending'}`)}
+              </span>
             </div>
-            {item.detail && <div className="mt-1 text-xs text-slate-500">{item.detail}</div>}
+            {item.detail && <div className="mt-1 text-xs text-muted-foreground">{item.detail}</div>}
             {item.status === 'fail' && item.suggestion && (
-              <div className="mt-1 text-xs text-amber-700">{item.suggestion}</div>
+              <div className="mt-1 text-xs text-amber-700 dark:text-amber-400">{item.suggestion}</div>
             )}
             {item.status === 'fail' && item.action === 'install_openclaw' && (
               <button
                 onClick={() => handleInstall('openclaw')}
                 disabled={!!installing}
-                className="mt-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="mt-2 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
-                Install OpenClaw
+                {t('env.installOpenClaw')}
               </button>
             )}
           </div>
         ))}
       </div>
 
-      {/* Install log panel */}
       {(installLogs.length > 0 || installing) && (
-        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-900 p-4">
+        <div className="mt-4 rounded-lg border border-border bg-slate-900 dark:bg-slate-950 p-4">
           <div className="mb-2 flex items-center gap-2">
             <span className="text-xs font-medium text-slate-300">
-              {installing ? `Installing ${installing}...` : installResult === 'success' ? 'Installation complete' : 'Installation failed'}
+              {installing ? t('env.installingLabel', { name: installing }) : installResult === 'success' ? t('env.installComplete') : t('env.installFailed')}
             </span>
             {installing && <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-blue-400" />}
           </div>
@@ -208,17 +210,17 @@ export default function Home() {
       )}
 
       {installResult === 'success' && (
-        <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-          Installation completed. Re-running checks...
+        <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+          {t('env.installSuccess')}
         </div>
       )}
       {installResult === 'failed' && (
-        <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          Installation failed. Check the logs above for details.
+        <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-400">
+          {t('env.installFailedMsg')}
         </div>
       )}
 
-      {error && <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>}
+      {error && <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-400">{error}</div>}
 
       <div className="mt-6 flex items-center justify-end">
         <div className="flex gap-2">
@@ -226,17 +228,17 @@ export default function Home() {
             <button
               onClick={runCheck}
               disabled={loading || !!installing}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Retry
+              {t('common.retry')}
             </button>
           )}
           <button
-            onClick={() => router.push('/feishu')}
+            onClick={() => router.push('/provider')}
             disabled={!allPassed}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Next
+            {t('common.next')}
           </button>
         </div>
       </div>

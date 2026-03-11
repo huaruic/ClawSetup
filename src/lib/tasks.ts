@@ -13,7 +13,14 @@ export type Task = {
   updatedAt: string;
 };
 
-const tasks = new Map<string, Task>();
+// Use globalThis to ensure a single shared Map across all Next.js API route modules.
+// In dev mode, Next.js may re-import modules for different routes, creating separate instances.
+const globalKey = '__clawsetup_tasks__';
+const g = globalThis as unknown as { [key: string]: Map<string, Task> };
+if (!g[globalKey]) {
+  g[globalKey] = new Map<string, Task>();
+}
+const tasks = g[globalKey];
 
 export function getTasks() {
   return tasks;
