@@ -9,10 +9,11 @@ type Step = { id: number; titleKey: string; href: string };
 
 const steps: Step[] = [
   { id: 1, titleKey: 'shell.steps.env', href: '/' },
-  { id: 2, titleKey: 'shell.steps.provider', href: '/provider' },
-  { id: 3, titleKey: 'shell.steps.verify', href: '/onboarding' },
-  { id: 4, titleKey: 'shell.steps.channels', href: '/feishu' },
-  { id: 5, titleKey: 'shell.steps.done', href: '/done' },
+  { id: 2, titleKey: 'shell.steps.openclaw', href: '/openclaw' },
+  { id: 3, titleKey: 'shell.steps.provider', href: '/provider' },
+  { id: 4, titleKey: 'shell.steps.verify', href: '/onboarding' },
+  { id: 5, titleKey: 'shell.steps.channels', href: '/feishu' },
+  { id: 6, titleKey: 'shell.steps.done', href: '/done' },
 ];
 
 export function SetupShell({ currentStep, children, status = 'Not started' }: { currentStep: number; children: ReactNode; status?: string }) {

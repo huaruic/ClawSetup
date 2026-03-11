@@ -36,6 +36,7 @@ export type DoneStepState = {
 };
 
 export type OnboardingState = {
+  openclawInstall: OpenClawStepState;
   provider: ProviderStepState;
   onboarding: OpenClawStepState;
   feishu: FeishuStepState;
@@ -45,6 +46,7 @@ export type OnboardingState = {
 const STORAGE_KEY = 'clawsetup_onboarding_state';
 
 export const defaultOnboardingState: OnboardingState = {
+  openclawInstall: { status: 'pending' },
   provider: { status: 'pending' },
   onboarding: { status: 'pending' },
   feishu: { status: 'pending' },
@@ -123,6 +125,7 @@ function normalizeState(value: unknown): OnboardingState {
   }
 
   return {
+    openclawInstall: normalizeOpenClawState(value.openclawInstall),
     provider: normalizeProviderState(value.provider),
     onboarding: normalizeOpenClawState(value.onboarding),
     feishu: normalizeFeishuState(value.feishu),

@@ -139,7 +139,7 @@ export default function ProviderPage() {
   }
 
   return (
-    <SetupShell currentStep={2} status={statusText}>
+    <SetupShell currentStep={3} status={statusText}>
       <h1 className="text-2xl font-semibold tracking-tight">{t('provider.title')}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t('provider.description')}</p>
 
@@ -232,7 +232,7 @@ export default function ProviderPage() {
       )}
 
       <div className="mt-6 flex items-center justify-between">
-        <Link href="/" className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent">{t('common.back')}</Link>
+        <Link href="/openclaw" className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent">{t('common.back')}</Link>
         <div className="flex gap-2">
           {!saved && (
             <button
