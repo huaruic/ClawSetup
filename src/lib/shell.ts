@@ -11,14 +11,14 @@ export function getPlatformAdapter(platform: NodeJS.Platform): PlatformAdapter {
     return {
       shell: 'powershell.exe',
       shellArgs: ['-NoProfile', '-Command'],
-      openclawInstallCommand: 'iwr -useb https://openclaw.ai/install.ps1 | iex',
+      openclawInstallCommand: 'npm install -g openclaw',
     };
   }
 
   return {
     shell: 'sh',
     shellArgs: ['-lc'],
-    openclawInstallCommand: 'curl -fsSL https://openclaw.ai/install.sh | bash',
+    openclawInstallCommand: 'npm install -g openclaw',
   };
 }
 
