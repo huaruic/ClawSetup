@@ -11,14 +11,18 @@ export function getPlatformAdapter(platform: NodeJS.Platform): PlatformAdapter {
     return {
       shell: 'powershell.exe',
       shellArgs: ['-NoProfile', '-Command'],
-      openclawInstallCommand: 'npm install -g openclaw',
+      openclawInstallCommand: 'npm install -g openclaw@latest',
     };
   }
 
+  // Use user's default shell (zsh on macOS, bash on most Linux) so that
+  // tools installed via nvm/homebrew/etc. are on PATH via login profile.
+  const userShell = process.env.SHELL || '/bin/zsh';
+
   return {
-    shell: 'sh',
+    shell: userShell,
     shellArgs: ['-lc'],
-    openclawInstallCommand: 'npm install -g openclaw',
+    openclawInstallCommand: 'npm install -g openclaw@latest',
   };
 }
 

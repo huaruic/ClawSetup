@@ -3,41 +3,50 @@ import { runShell } from '@/lib/shell';
 import { createTask, logTask } from '@/lib/tasks';
 
 export async function POST() {
-  // Check if the gateway is already running
-  let alreadyRunning = false;
-  try {
-    const statusResult = await runShell('openclaw gateway status');
-    const output = statusResult.stdout || '';
-    if (output.includes('RPC probe: ok') || output.includes('Listening:')) {
-      alreadyRunning = true;
-    }
-  } catch {
-    // status command failed, gateway is not running
-  }
-
-  if (alreadyRunning) {
-    const task = createTask('runtime_restart');
-    task.status = 'success';
-    logTask(task, 'Gateway is already running, skipping restart.');
-    return NextResponse.json({ taskId: task.id, status: task.status });
-  }
-
   const task = createTask('runtime_restart');
   task.status = 'running';
-  logTask(task, 'Attempting gateway restart...');
+  logTask(task, 'Ensuring gateway is running...');
 
   void (async () => {
     try {
+      // Always attempt restart to pick up latest config
       await runShell('openclaw gateway restart');
       logTask(task, 'Gateway restarted successfully.');
-      task.status = 'success';
-    } catch (restartErr: any) {
-      logTask(task, `Restart failed: ${restartErr?.shortMessage || restartErr?.message || 'unknown'}`);
-      logTask(task, 'Trying to install and start gateway service...');
-      try {
-        await runShell('openclaw gateway install');
-        logTask(task, 'Gateway service installed and started.');
+
+      // Wait briefly and verify it's actually running
+      await new Promise((r) => setTimeout(r, 2000));
+      const status = await runShell('openclaw gateway status');
+      const output = status.stdout || '';
+      if (output.includes('RPC probe: ok') || output.includes('Listening:')) {
         task.status = 'success';
+        logTask(task, 'Gateway is running and healthy.');
+      } else if (output.includes('Runtime: stopped')) {
+        throw new Error('Gateway stopped after restart');
+      } else {
+        task.status = 'success';
+        logTask(task, 'Gateway restart completed.');
+      }
+    } catch (restartErr: any) {
+      logTask(task, `Restart attempt: ${restartErr?.shortMessage || restartErr?.message || 'unknown'}`);
+      logTask(task, 'Trying to reinstall gateway service...');
+      try {
+        // Unload first to clean up stale LaunchAgent state
+        await runShell('openclaw gateway uninstall').catch(() => {});
+        await new Promise((r) => setTimeout(r, 1000));
+        await runShell('openclaw gateway install');
+        logTask(task, 'Gateway service reinstalled.');
+
+        // Verify after install
+        await new Promise((r) => setTimeout(r, 3000));
+        const status = await runShell('openclaw gateway status');
+        const output = status.stdout || '';
+        if (output.includes('RPC probe: ok') || output.includes('Listening:')) {
+          task.status = 'success';
+          logTask(task, 'Gateway is running and healthy.');
+        } else {
+          task.status = 'success';
+          logTask(task, 'Gateway service installed. It may take a moment to start.');
+        }
       } catch (installErr: any) {
         logTask(task, `Install failed: ${installErr?.shortMessage || installErr?.message || 'unknown'}`);
         task.status = 'failed';

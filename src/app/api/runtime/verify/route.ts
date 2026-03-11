@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { commandExists, runShell } from '@/lib/shell';
-import { getFeishuConfig, exchangeFeishuTenantToken, verifyFeishuBaseApi } from '@/lib/feishu';
+import { exchangeFeishuTenantToken, verifyFeishuBaseApi } from '@/lib/feishu';
+import { getOpenClawFeishuConfig, hasOpenClawFeishuCredentials } from '@/lib/openclaw-config';
 
 export async function POST() {
-  const latestFeishuConfig = getFeishuConfig();
-  const configValid = Boolean(latestFeishuConfig);
+  const latestFeishuConfig = getOpenClawFeishuConfig();
+  const configValid = hasOpenClawFeishuCredentials(latestFeishuConfig);
   const hasOpenClaw = await commandExists('openclaw');
 
   let gatewayHealthy = false;
@@ -21,9 +22,12 @@ export async function POST() {
   let errorMessage: string | null = null;
   let suggestion: string | null = null;
 
-  if (latestFeishuConfig) {
+  if (configValid && latestFeishuConfig && typeof latestFeishuConfig.appSecret === 'string') {
     try {
-      const tokenResult = await exchangeFeishuTenantToken(latestFeishuConfig);
+      const tokenResult = await exchangeFeishuTenantToken({
+        appId: latestFeishuConfig.appId as string,
+        appSecret: latestFeishuConfig.appSecret,
+      });
       tokenExchangePassed = tokenResult.ok;
 
       if (!tokenResult.ok) {
@@ -42,15 +46,15 @@ export async function POST() {
           suggestion = 'Ensure the Feishu app has bot capability and correct permissions.';
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       errorCode = 'FEISHU_NETWORK_ERROR';
-      errorMessage = err?.message ?? 'Network error when connecting to Feishu API';
+      errorMessage = err instanceof Error ? err.message : 'Network error when connecting to Feishu API';
       suggestion = 'Check your network connection and try again.';
     }
   } else {
     errorCode = 'FEISHU_CONFIG_MISSING';
-    errorMessage = 'Feishu config has not been applied';
-    suggestion = 'Go back to Step 2 and apply Feishu configuration.';
+    errorMessage = 'Feishu config has not been written into OpenClaw';
+    suggestion = 'Go back to Step 2 and apply Feishu configuration to OpenClaw.';
   }
 
   if (!hasOpenClaw) {
