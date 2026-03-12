@@ -64,18 +64,27 @@ export async function exchangeFeishuTenantToken(config: FeishuCredentials) {
   };
 }
 
+type FeishuBotInfoResponse = FeishuApiResponse & {
+  bot?: {
+    open_id?: string;
+    bot_name?: string;
+  };
+};
+
 export async function verifyFeishuBaseApi(tenantAccessToken: string) {
   const resp = await fetch('https://open.feishu.cn/open-apis/bot/v3/info', {
     method: 'GET',
     headers: { Authorization: `Bearer ${tenantAccessToken}` },
   });
 
-  const data = (await resp.json()) as FeishuApiResponse;
+  const data = (await resp.json()) as FeishuBotInfoResponse;
   const ok = resp.ok && data?.code === 0;
 
   return {
     ok,
     code: data?.code,
     msg: data?.msg,
+    openId: data?.bot?.open_id,
+    botName: data?.bot?.bot_name,
   };
 }

@@ -8,7 +8,7 @@ import { ThemeToggle, LanguageToggle } from '@/components/toolbar';
 type Step = { id: number; titleKey: string; href: string };
 
 const steps: Step[] = [
-  { id: 1, titleKey: 'shell.steps.env', href: '/' },
+  { id: 1, titleKey: 'shell.steps.welcome', href: '/' },
   { id: 2, titleKey: 'shell.steps.openclaw', href: '/openclaw' },
   { id: 3, titleKey: 'shell.steps.provider', href: '/provider' },
   { id: 4, titleKey: 'shell.steps.verify', href: '/onboarding' },

@@ -12,13 +12,16 @@ export async function POST() {
     ...(!hasNode && { suggestion: 'Install Node.js from https://nodejs.org/' }),
   });
 
-  const hasNpm = await commandExists('npm');
-  checks.push({
-    key: 'npm',
-    pass: hasNpm,
-    message: hasNpm ? 'npm detected' : 'npm not found',
-    ...(!hasNpm && { suggestion: 'npm comes with Node.js. Please install Node.js first.' }),
-  });
+  const needsCurl = process.platform !== 'win32';
+  if (needsCurl) {
+    const hasCurl = await commandExists('curl');
+    checks.push({
+      key: 'curl',
+      pass: hasCurl,
+      message: hasCurl ? 'curl detected' : 'curl not found',
+      ...(!hasCurl && { suggestion: 'Install curl: https://curl.se/download.html' }),
+    });
+  }
 
   return NextResponse.json({
     ok: checks.every((c) => c.pass),
