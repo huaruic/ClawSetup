@@ -34,3 +34,8 @@ backend/
 # internal docs (not for open source)
 prd.md
 PROGRESS.md
+
+.claude/
+AGENTS.md
+VERIFY_DEBUG_GUIDE.md
+diagnose-verify.js

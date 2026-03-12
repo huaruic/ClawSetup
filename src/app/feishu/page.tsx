@@ -34,8 +34,11 @@ export default function FeishuPage() {
   const [serverError, setServerError] = useState('');
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [pairingRequest, setPairingRequest] = useState<PairingRequest | null>(null);
+  const [autoFilledCode, setAutoFilledCode] = useState('');
+  const [autoApproving, setAutoApproving] = useState(false);
   const [pairingMessage, setPairingMessage] = useState('');
   const [connectionMessage, setConnectionMessage] = useState('');
+  const [botOpenId, setBotOpenId] = useState('');
 
   const statusText = useMemo(() => {
     if (loadingConfig) return t('feishu.statusLoading');
@@ -50,8 +53,55 @@ export default function FeishuPage() {
     try {
       const response = await fetch('/api/feishu/pairing', { cache: 'no-store' });
       const data = await response.json();
-      if (data.ok) {
-        setPairingRequest(data.request ?? null);
+      if (!data.ok) return;
+
+      const req = data.request ?? null;
+      setPairingRequest(req);
+      if (!req?.code) return;
+
+      // Auto-fill if user hasn't manually typed a different code
+      setPairingCode((prev) => {
+        if (!prev || prev === autoFilledCode) {
+          setAutoFilledCode(req.code);
+          return req.code;
+        }
+        return prev;
+      });
+
+      // Auto-approve the detected code
+      if (!autoApproving && !pairingApproved && !approving) {
+        setAutoApproving(true);
+        try {
+          const approveResp = await fetch('/api/feishu/pairing/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: req.code }),
+          });
+          const approveData = await approveResp.json();
+          if (approveResp.ok && approveData.ok) {
+            setPairingCode(req.code);
+            setPairingApproved(true);
+            setPairingMessage(approveData.message || 'Pairing approved!');
+            updateOnboardingState((current) => ({
+              ...current,
+              feishu: {
+                status: 'passed',
+                appId,
+                connectionReady: true,
+                pairingApproved: true,
+                message: approveData.message || 'Pairing approved!',
+              },
+              done: {
+                status: 'passed',
+                variant: 'feishu_connected',
+              },
+            }));
+          }
+        } catch {
+          // Auto-approve failed silently, user can still approve manually
+        } finally {
+          setAutoApproving(false);
+        }
       }
     } catch {
       // Ignore polling failures
@@ -145,6 +195,10 @@ export default function FeishuPage() {
       if (!validationResponse.ok || !validationData.ok) {
         setServerError(validationData.error || 'Failed to validate Feishu credentials');
         return;
+      }
+
+      if (validationData.botOpenId) {
+        setBotOpenId(validationData.botOpenId);
       }
 
       const applyResponse = await fetch('/api/config/apply', {
@@ -357,9 +411,47 @@ export default function FeishuPage() {
         <div className="text-sm font-medium">{t('feishu.step2Title')}</div>
         <p className="mt-1 text-sm text-muted-foreground">{t('feishu.step2Desc')}</p>
 
+        {connectionReady && botOpenId && !pairingApproved && (
+          <a
+            href={`https://applink.feishu.cn/client/chat/open?openId=${botOpenId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            {t('feishu.openBotChat')}
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+          </a>
+        )}
+
+        {connectionReady && !pairingApproved && !pairingRequest && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+            {t('feishu.waitingForMessage')}
+          </div>
+        )}
+
         {pairingRequest && !pairingApproved && (
-          <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
-            {t('feishu.pendingCode', { code: pairingRequest.code })}
+          <div className="mt-3 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-900/20">
+            <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-400">
+              {autoApproving && (
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-amber-400 border-t-amber-700 dark:border-amber-600 dark:border-t-amber-300" />
+              )}
+              {autoApproving
+                ? t('feishu.autoApproving', { code: pairingRequest.code })
+                : t('feishu.pendingCode', { code: pairingRequest.code })}
+            </div>
+            {!autoApproving && pairingCode !== pairingRequest.code && (
+              <button
+                onClick={() => {
+                  setPairingCode(pairingRequest.code);
+                  setAutoFilledCode(pairingRequest.code);
+                  setFieldErrors((prev) => ({ ...prev, pairingCode: undefined }));
+                }}
+                className="ml-2 shrink-0 rounded px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-800/30"
+              >
+                {t('feishu.useThisCode')}
+              </button>
+            )}
           </div>
         )}
 

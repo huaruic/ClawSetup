@@ -11,7 +11,7 @@ export function getPlatformAdapter(platform: NodeJS.Platform): PlatformAdapter {
     return {
       shell: 'powershell.exe',
       shellArgs: ['-NoProfile', '-Command'],
-      openclawInstallCommand: 'npm install -g openclaw@latest',
+      openclawInstallCommand: '& ([scriptblock]::Create((iwr -useb https://openclaw.ai/install.ps1))) -NoOnboard',
     };
   }
 
@@ -22,7 +22,7 @@ export function getPlatformAdapter(platform: NodeJS.Platform): PlatformAdapter {
   return {
     shell: userShell,
     shellArgs: ['-lc'],
-    openclawInstallCommand: 'npm install -g openclaw@latest',
+    openclawInstallCommand: 'curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard',
   };
 }
 
