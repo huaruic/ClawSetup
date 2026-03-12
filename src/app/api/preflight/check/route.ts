@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server';
-import { commandExists } from '@/lib/shell';
+import { commandExists, getNodeVersion } from '@/lib/shell';
+
+const MIN_NODE_MAJOR = 22;
 
 export async function POST() {
   const checks: Array<{ key: string; pass: boolean; message: string; suggestion?: string }> = [];
 
   const hasNode = await commandExists('node');
+  const nodeVersion = hasNode ? await getNodeVersion() : null;
+  const nodeMajor = nodeVersion ? parseInt(nodeVersion.split('.')[0], 10) : 0;
+  const nodeVersionOk = hasNode && nodeMajor >= MIN_NODE_MAJOR;
+
   checks.push({
     key: 'node',
-    pass: hasNode,
-    message: hasNode ? 'Node detected' : 'Node not found',
-    ...(!hasNode && { suggestion: 'Install Node.js from https://nodejs.org/' }),
+    pass: nodeVersionOk,
+    message: nodeVersionOk
+      ? `Node v${nodeVersion} detected`
+      : hasNode
+        ? `Node v${nodeVersion} detected, but >= ${MIN_NODE_MAJOR}.0.0 is required`
+        : 'Node not found',
+    ...(!nodeVersionOk && {
+      suggestion: hasNode
+        ? `Upgrade Node.js to v${MIN_NODE_MAJOR}+ from https://nodejs.org/en/download`
+        : 'Install Node.js from https://nodejs.org/',
+    }),
   });
 
   const needsCurl = process.platform !== 'win32';

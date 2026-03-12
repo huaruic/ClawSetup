@@ -31,6 +31,15 @@ export async function runShell(cmd: string) {
   return execa(a.shell, [...a.shellArgs, cmd]);
 }
 
+export async function getNodeVersion(): Promise<string | null> {
+  try {
+    const { stdout } = await runShell('node -v');
+    return stdout.trim().replace(/^v/, '');
+  } catch {
+    return null;
+  }
+}
+
 export async function commandExists(cmd: string) {
   try {
     if (process.platform === 'win32') {
