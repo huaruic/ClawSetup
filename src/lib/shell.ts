@@ -21,7 +21,7 @@ export function getPlatformAdapter(platform: NodeJS.Platform): PlatformAdapter {
 
   return {
     shell: userShell,
-    shellArgs: ['-lc'],
+    shellArgs: ['-lic'],
     openclawInstallCommand: 'curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard',
   };
 }

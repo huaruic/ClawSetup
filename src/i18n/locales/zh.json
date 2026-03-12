@@ -39,7 +39,15 @@
     "step2": "配置 AI 提供商",
     "step3": "初始化 OpenClaw 并启动网关",
     "step4": "连接 IM 频道（可选）",
-    "start": "开始配置"
+    "start": "开始配置",
+    "nodeOk": "Node.js {version} — 版本满足要求",
+    "nodeOutdated": "检测到 Node.js {version}，建议升级到 22 以上版本",
+    "nodeNotDetected": "未检测到 Node.js",
+    "nodeOutdatedHint": "当前版本可能导致 OpenClaw 运行异常，建议安装最新版本。",
+    "nodeNotDetectedHint": "后续安装 OpenClaw 不受影响，但运行时需要 Node.js。",
+    "downloadNode": "下载 Node.js",
+    "recheck": "重新检测",
+    "rechecking": "检测中..."
   },
   "openclaw": {
     "title": "OpenClaw CLI",
