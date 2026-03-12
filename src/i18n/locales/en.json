@@ -39,7 +39,15 @@
     "step2": "Configure your AI provider",
     "step3": "Initialize OpenClaw and start the gateway",
     "step4": "Connect IM channels (optional)",
-    "start": "Get Started"
+    "start": "Get Started",
+    "nodeOk": "Node.js {version} — meets requirement",
+    "nodeOutdated": "Node.js {version} detected, upgrade to 22+ is recommended",
+    "nodeNotDetected": "Node.js not detected",
+    "nodeOutdatedHint": "The current version may cause issues with OpenClaw. Please install the latest version.",
+    "nodeNotDetectedHint": "OpenClaw installation won't be affected, but Node.js is required at runtime.",
+    "downloadNode": "Download Node.js",
+    "recheck": "Re-check",
+    "rechecking": "Checking..."
   },
   "openclaw": {
     "title": "OpenClaw CLI",

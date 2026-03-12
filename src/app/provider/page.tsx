@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SetupShell } from '@/components/setup-shell';
+import { Select, SelectTrigger, SelectValue, SelectIcon, SelectPopup, SelectItem } from '@/components/ui/select';
 import { providers } from '@/lib/providers';
 import { useT } from '@/i18n/context';
 import { loadOnboardingState, updateOnboardingState } from '@/lib/onboarding-state';
@@ -144,19 +145,23 @@ export default function ProviderPage() {
       <p className="mt-2 text-sm text-muted-foreground">{t('provider.description')}</p>
 
       <div className="mt-6 space-y-4">
-        <label className="block space-y-1">
+        <div className="space-y-1">
           <span className="text-sm font-medium">{t('provider.selectProvider')}</span>
-          <select
-            value={selectedId}
-            onChange={(e) => handleProviderChange(e.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+          <Select
+            value={selectedId || undefined}
+            onValueChange={(val: string | null) => val && handleProviderChange(val)}
           >
-            <option value="">{t('provider.selectPlaceholder')}</option>
-            {providers.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </label>
+            <SelectTrigger>
+              <SelectValue placeholder={t('provider.selectPlaceholder')} />
+              <SelectIcon />
+            </SelectTrigger>
+            <SelectPopup>
+              {providers.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectPopup>
+          </Select>
+        </div>
 
         {selected && (
           <label className="block space-y-1">
@@ -176,25 +181,31 @@ export default function ProviderPage() {
         )}
 
         {selected?.regions && (
-          <label className="block space-y-1">
+          <div className="space-y-1">
             <span className="text-sm font-medium">{t('provider.region')}</span>
-            <select
+            <Select
               value={providerRegion}
-              onChange={(e) => {
-                setProviderRegion(e.target.value);
+              onValueChange={(val: string | null) => {
+                if (!val) return;
+                setProviderRegion(val);
                 setSaved(false);
                 setValidationMessage('');
               }}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
             >
-              {selected.regions.map((region) => (
-                <option key={region.id} value={region.id}>{region.label}</option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+                <SelectIcon />
+              </SelectTrigger>
+              <SelectPopup>
+                {selected.regions.map((region) => (
+                  <SelectItem key={region.id} value={region.id}>{region.label}</SelectItem>
+                ))}
+              </SelectPopup>
+            </Select>
             <p className="text-xs text-muted-foreground">
               {selected.regions.find((region) => region.id === providerRegion)?.helpText}
             </p>
-          </label>
+          </div>
         )}
 
         {isCustom && (

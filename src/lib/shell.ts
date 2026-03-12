@@ -21,7 +21,7 @@ export function getPlatformAdapter(platform: NodeJS.Platform): PlatformAdapter {
 
   return {
     shell: userShell,
-    shellArgs: ['-lc'],
+    shellArgs: ['-lic'],
     openclawInstallCommand: 'curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard',
   };
 }
@@ -29,6 +29,15 @@ export function getPlatformAdapter(platform: NodeJS.Platform): PlatformAdapter {
 export async function runShell(cmd: string) {
   const a = getPlatformAdapter(process.platform);
   return execa(a.shell, [...a.shellArgs, cmd]);
+}
+
+export async function getNodeVersion(): Promise<string | null> {
+  try {
+    const { stdout } = await runShell('node -v');
+    return stdout.trim().replace(/^v/, '');
+  } catch {
+    return null;
+  }
 }
 
 export async function commandExists(cmd: string) {
