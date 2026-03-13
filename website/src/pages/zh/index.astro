@@ -1,0 +1,13 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import HomePage from '../../components/HomePage.astro';
+import { translations } from '../../i18n/translations';
+---
+
+<Layout
+  title={translations.zh.meta.title}
+  description={translations.zh.meta.description}
+  lang="zh"
+>
+  <HomePage t={translations.zh} lang="zh" />
+</Layout>

@@ -31,6 +31,9 @@ next-env.d.ts
 # legacy backend build output
 backend/
 
+# standalone website (separate repo: huaruic/clawsetup-website)
+clawsetup-website/
+
 # internal docs (not for open source)
 prd.md
 PROGRESS.md

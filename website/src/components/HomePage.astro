@@ -1,0 +1,693 @@
+---
+import type { Translations } from '../i18n/translations';
+
+interface Props {
+  t: Translations;
+  lang: 'en' | 'zh';
+}
+
+const { t, lang } = Astro.props;
+const repoUrl = 'https://github.com/huaruic/clawsetup';
+const baseUrl = lang === 'zh' ? '/zh' : '';
+---
+
+<main class="page-shell">
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="topbar">
+    <a class="brand" href={`${baseUrl}#top`} aria-label="ClawSetup home">
+      <span class="brand-mark">
+        <img src="/logo.svg" alt="ClawSetup" width="28" height="28" />
+      </span>
+      <span class="brand-copy">
+        <strong>ClawSetup</strong>
+        <small>{t.brand.tagline}</small>
+      </span>
+    </a>
+
+    <nav class="nav">
+      <a href={`${baseUrl}#why`}>{t.nav.why}</a>
+      <a href={`${baseUrl}#walkthrough`}>{t.nav.walkthrough}</a>
+      <a href={`${baseUrl}#faq`}>{t.nav.faq}</a>
+      {lang === 'en' ? (
+        <a href="/zh" class="nav-lang">中文</a>
+      ) : (
+        <a href="/" class="nav-lang">English</a>
+      )}
+      <a class="nav-cta" href={repoUrl} target="_blank" rel="noreferrer">GitHub</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="hero-copy">
+      <div class="eyebrow">
+        {t.hero.eyebrow.map((e) => (
+          <span>{e}</span>
+        ))}
+      </div>
+
+      <h1>{t.hero.title}</h1>
+      <p class="hero-text">{t.hero.text}</p>
+
+      <div class="hero-actions">
+        <a class="button button-primary" href={repoUrl} target="_blank" rel="noreferrer">
+          {t.hero.ctaPrimary}
+        </a>
+        <a class="button button-secondary" href={`${baseUrl}#walkthrough`}>{t.hero.ctaSecondary}</a>
+      </div>
+
+      <ul class="hero-points">
+        {t.hero.points.map((point) => (
+          <li>{point}</li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-panel">
+        <div class="panel-bar">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <img
+          src="/readme/01-welcome.png"
+          alt={t.gallery[0].alt}
+          width="1600"
+          height="1038"
+        />
+      </div>
+      <div class="stat-card stat-a">
+        <strong>{t.stat.minute}</strong>
+        <span>{t.stat.minuteDesc}</span>
+      </div>
+      <div class="stat-card stat-b">
+        <strong>{t.stat.local}</strong>
+        <span>{t.stat.localDesc}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-grid" id="why">
+    <div class="section-intro">
+      <span class="section-kicker">{t.why.kicker}</span>
+      <h2>{t.why.title}</h2>
+      <p>{t.why.text}</p>
+    </div>
+
+    <div class="card-grid">
+      {t.highlight.map((item) => (
+        <article class="info-card">
+          <h3>{item.title}</h3>
+          <p>{item.body}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="section-grid">
+    <div class="section-intro narrow">
+      <span class="section-kicker">{t.whatHappens.kicker}</span>
+      <h2>{t.whatHappens.title}</h2>
+    </div>
+
+    <ol class="flow-list">
+      {t.steps.map((step, index) => (
+        <li class="flow-item">
+          <span class="flow-index">0{index + 1}</span>
+          <p>{step}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="section-grid" id="walkthrough">
+    <div class="section-intro">
+      <span class="section-kicker">{t.walkthrough.kicker}</span>
+      <h2>{t.walkthrough.title}</h2>
+      <p>{t.walkthrough.text}</p>
+    </div>
+
+    <div class="gallery">
+      {t.gallery.map((item) => (
+        <figure class="gallery-card">
+          <img src={item.src} alt={item.alt} width="1600" height="1038" loading="lazy" />
+          <figcaption>
+            <strong>{item.title}</strong>
+            <p>{item.description}</p>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  </section>
+
+  <section class="story-panel">
+    <div>
+      <span class="section-kicker">{t.story.kicker}</span>
+      <h2>{t.story.title}</h2>
+    </div>
+    <p>{t.story.text}</p>
+  </section>
+
+  <section class="faq-section" id="faq">
+    <div class="section-intro narrow">
+      <span class="section-kicker">{t.faq.kicker}</span>
+      <h2>{t.faq.title}</h2>
+    </div>
+
+    <div class="faq-list">
+      {t.faq.items.map((item) => (
+        <article class="faq-item">
+          <h3>{item.question}</h3>
+          <p>{item.answer}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="cta-panel">
+    <div>
+      <span class="section-kicker">{t.cta.kicker}</span>
+      <h2>{t.cta.title}</h2>
+    </div>
+
+    <div class="cta-actions">
+      <a class="button button-primary" href={repoUrl} target="_blank" rel="noreferrer">
+        {t.cta.primary}
+      </a>
+      <a class="button button-secondary" href={`${repoUrl}#quick-start`} target="_blank" rel="noreferrer">
+        {t.cta.secondary}
+      </a>
+    </div>
+  </section>
+</main>
+
+<style>
+  .page-shell {
+    position: relative;
+    overflow: clip;
+    padding: 24px;
+  }
+
+  .ambient {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(40px);
+    pointer-events: none;
+  }
+
+  .ambient-a {
+    top: 100px;
+    right: -120px;
+    width: 320px;
+    height: 320px;
+    background: rgba(232, 93, 76, 0.14);
+  }
+
+  .ambient-b {
+    top: 720px;
+    left: -100px;
+    width: 280px;
+    height: 280px;
+    background: rgba(255, 176, 136, 0.1);
+  }
+
+  .topbar,
+  .hero,
+  .section-grid,
+  .story-panel,
+  .faq-section,
+  .cta-panel {
+    position: relative;
+    z-index: 1;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 48px;
+    padding: 8px 0;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+  }
+
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    background: rgba(20, 10, 8, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+
+  .brand-mark img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+  }
+
+  .brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-copy strong {
+    font-size: 1rem;
+    letter-spacing: 0.03em;
+  }
+
+  .brand-copy small {
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  .nav-lang {
+    color: var(--accent-strong);
+  }
+
+  .nav-lang {
+    color: var(--accent-strong);
+    font-size: 0.9rem;
+  }
+
+  .nav-cta {
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text) !important;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.04fr) minmax(420px, 0.96fr);
+    gap: 40px;
+    align-items: center;
+    padding: 18px 0 72px;
+  }
+
+  .eyebrow,
+  .section-kicker {
+    display: inline-flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: var(--accent-strong);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+  }
+
+  .eyebrow span {
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 176, 136, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 176, 136, 0.06);
+  }
+
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  h1 {
+    margin-top: 22px;
+    font-size: clamp(3rem, 7vw, 5.8rem);
+    line-height: 0.95;
+    max-width: 16ch;
+  }
+
+  .hero-text,
+  .section-intro p,
+  .story-panel p,
+  .faq-item p,
+  .gallery-card p,
+  .info-card p,
+  .flow-item p {
+    color: var(--muted);
+    font-size: 1.04rem;
+  }
+
+  .hero-text {
+    max-width: 58ch;
+    margin: 22px 0 0;
+  }
+
+  .hero-actions,
+  .cta-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      background 160ms ease;
+  }
+
+  .button:hover {
+    transform: translateY(-1px);
+  }
+
+  .button-primary {
+    background: linear-gradient(135deg, #e85d4c 0%, #ffb088 100%);
+    color: #140a08;
+  }
+
+  .button-secondary {
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+  }
+
+  .hero-points {
+    display: grid;
+    gap: 10px;
+    margin: 26px 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text);
+  }
+
+  .hero-points li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .hero-points li::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    margin-top: 0.5rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #e85d4c 0%, #ffb088 100%);
+    flex: 0 0 auto;
+  }
+
+  .hero-visual {
+    position: relative;
+    padding-bottom: 52px;
+  }
+
+  .hero-panel,
+  .info-card,
+  .flow-item,
+  .gallery-card,
+  .story-panel,
+  .faq-item,
+  .cta-panel {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--panel-strong), var(--panel));
+    box-shadow: var(--shadow);
+  }
+
+  .hero-panel {
+    overflow: hidden;
+    border-radius: 28px;
+  }
+
+  .panel-bar {
+    display: flex;
+    gap: 8px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .panel-bar span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 160, 120, 0.3);
+  }
+
+  .hero-panel img {
+    width: 100%;
+    height: auto;
+  }
+
+  .stat-card {
+    position: absolute;
+    max-width: 220px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: rgba(20, 10, 8, 0.9);
+    backdrop-filter: blur(16px);
+  }
+
+  .stat-card strong,
+  .gallery-card strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .stat-card span {
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .stat-a {
+    left: -28px;
+    bottom: 18px;
+  }
+
+  .stat-b {
+    right: -18px;
+    top: 34px;
+  }
+
+  .section-grid,
+  .faq-section {
+    padding: 36px 0 26px;
+  }
+
+  .section-intro {
+    display: grid;
+    gap: 16px;
+    max-width: 780px;
+    margin-bottom: 26px;
+  }
+
+  .section-intro h2,
+  .story-panel h2,
+  .cta-panel h2 {
+    font-size: clamp(2rem, 4.8vw, 3.5rem);
+    line-height: 1.02;
+  }
+
+  .narrow {
+    max-width: 680px;
+  }
+
+  .card-grid,
+  .gallery,
+  .faq-list {
+    display: grid;
+    gap: 18px;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .info-card {
+    border-radius: 24px;
+    padding: 24px;
+  }
+
+  .info-card h3 {
+    margin-bottom: 10px;
+    font-size: 1.35rem;
+  }
+
+  .flow-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .flow-item {
+    border-radius: 24px;
+    padding: 22px;
+  }
+
+  .flow-index {
+    display: inline-flex;
+    margin-bottom: 18px;
+    color: var(--accent-strong);
+    font-size: 0.88rem;
+    letter-spacing: 0.12em;
+  }
+
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gallery-card {
+    margin: 0;
+    overflow: hidden;
+    border-radius: 26px;
+  }
+
+  .gallery-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    vertical-align: top;
+  }
+
+  .gallery-card figcaption {
+    padding: 18px 18px 20px;
+  }
+
+  .gallery-card p {
+    margin: 0;
+  }
+
+  .story-panel,
+  .cta-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 24px;
+    align-items: start;
+    margin-top: 38px;
+    padding: 30px;
+    border-radius: 30px;
+  }
+
+  .faq-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .faq-item {
+    border-radius: 24px;
+    padding: 22px 24px;
+  }
+
+  .faq-item h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+
+  .faq-item p {
+    margin: 14px 0 0;
+  }
+
+  .cta-panel {
+    margin-top: 26px;
+    margin-bottom: 36px;
+  }
+
+  @media (max-width: 1100px) {
+    .hero,
+    .story-panel,
+    .cta-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-copy {
+      max-width: 820px;
+    }
+
+    .flow-list,
+    .card-grid,
+    .gallery,
+    .faq-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px) {
+    .page-shell {
+      padding: 18px;
+    }
+
+    .topbar {
+      align-items: flex-start;
+      flex-direction: column;
+      margin-bottom: 28px;
+    }
+
+    .hero {
+      gap: 26px;
+      padding-bottom: 46px;
+    }
+
+    h1 {
+      max-width: none;
+    }
+
+    .card-grid,
+    .flow-list,
+    .gallery,
+    .faq-list {
+      grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+      position: static;
+      max-width: none;
+      margin-top: 14px;
+    }
+
+    .hero-visual {
+      padding-bottom: 0;
+    }
+
+    .story-panel,
+    .cta-panel,
+    .info-card,
+    .flow-item,
+    .faq-item {
+      padding: 22px;
+    }
+  }
+</style>
