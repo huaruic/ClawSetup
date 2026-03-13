@@ -16,6 +16,8 @@ export const translations = {
       why: 'Why',
       walkthrough: 'Walkthrough',
       faq: 'FAQ',
+      themeToLight: 'Light',
+      themeToDark: 'Dark',
     },
     hero: {
       eyebrow: ['macOS', 'Local-first', 'No terminal required'],
@@ -146,6 +148,8 @@ export const translations = {
       why: '为什么',
       walkthrough: '使用流程',
       faq: '常见问题',
+      themeToLight: '浅色',
+      themeToDark: '深色',
     },
     hero: {
       eyebrow: ['macOS', '本地优先', '无需终端'],

@@ -17,6 +17,9 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      (function(){var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var theme=t||(d?'dark':'light');document.documentElement.setAttribute('data-theme',theme);})();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
@@ -29,11 +32,21 @@ const {
   </head>
   <body>
     <slot />
+    <script is:inline>
+      document.getElementById('theme-toggle')?.addEventListener('click', function () {
+        var html = document.documentElement;
+        var next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+      });
+    </script>
   </body>
 </html>
 
 <style is:global>
-  :root {
+  /* Dark theme (default, matches original lobster) */
+  :root,
+  [data-theme="dark"] {
     color-scheme: dark;
     --bg: #140a08;
     --bg-elevated: rgba(20, 12, 10, 0.72);
@@ -46,6 +59,36 @@ const {
     --accent: #e85d4c;
     --accent-strong: #ffb088;
     --shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+    --brand-mark-bg: rgba(20, 10, 8, 0.6);
+    --stat-card-bg: rgba(20, 10, 8, 0.9);
+    --nav-cta-bg: rgba(255, 255, 255, 0.03);
+    --eyebrow-border: rgba(255, 176, 136, 0.18);
+    --eyebrow-bg: rgba(255, 176, 136, 0.06);
+    --button-secondary-bg: rgba(255, 255, 255, 0.03);
+    --panel-bar-bg: rgba(255, 255, 255, 0.02);
+  }
+
+  /* Light theme */
+  [data-theme="light"] {
+    color-scheme: light;
+    --bg: #faf6f2;
+    --bg-elevated: rgba(255, 250, 245, 0.9);
+    --panel: rgba(255, 248, 242, 0.95);
+    --panel-strong: #fffaf5;
+    --line: rgba(100, 60, 50, 0.14);
+    --line-strong: rgba(100, 60, 50, 0.28);
+    --text: #1a0f0b;
+    --muted: #6b5344;
+    --accent: #e85d4c;
+    --accent-strong: #c94a3d;
+    --shadow: 0 20px 60px rgba(100, 50, 30, 0.12);
+    --brand-mark-bg: rgba(255, 250, 245, 0.9);
+    --stat-card-bg: rgba(255, 248, 242, 0.95);
+    --nav-cta-bg: rgba(100, 60, 50, 0.06);
+    --eyebrow-border: rgba(201, 74, 61, 0.25);
+    --eyebrow-bg: rgba(232, 93, 76, 0.08);
+    --button-secondary-bg: rgba(100, 60, 50, 0.06);
+    --panel-bar-bg: rgba(100, 60, 50, 0.04);
   }
 
   * {
@@ -60,11 +103,7 @@ const {
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
-    background:
-      radial-gradient(circle at top, rgba(232, 93, 76, 0.12), transparent 28%),
-      radial-gradient(circle at 80% 20%, rgba(255, 176, 136, 0.08), transparent 22%),
-      linear-gradient(180deg, #0f0808 0%, #140a08 48%, #0a0605 100%);
-    color: var(--text);
+    transition: background 0.3s ease, color 0.3s ease;
     font-family:
       'Avenir Next',
       'Segoe UI',
@@ -76,6 +115,23 @@ const {
     text-rendering: optimizeLegibility;
   }
 
+  :root body,
+  [data-theme="dark"] body {
+    background:
+      radial-gradient(circle at top, rgba(232, 93, 76, 0.12), transparent 28%),
+      radial-gradient(circle at 80% 20%, rgba(255, 176, 136, 0.08), transparent 22%),
+      linear-gradient(180deg, #0f0808 0%, #140a08 48%, #0a0605 100%);
+    color: var(--text);
+  }
+
+  [data-theme="light"] body {
+    background:
+      radial-gradient(circle at top, rgba(232, 93, 76, 0.06), transparent 28%),
+      radial-gradient(circle at 80% 20%, rgba(255, 176, 136, 0.04), transparent 22%),
+      linear-gradient(180deg, #fdf8f4 0%, #faf6f2 50%, #f5efe8 100%);
+    color: var(--text);
+  }
+
   img {
     display: block;
     max-width: 100%;
@@ -83,5 +139,19 @@ const {
 
   a {
     color: inherit;
+  }
+
+  /* 主题切换图标：浅色显示太阳，深色显示月亮 */
+  .theme-icon {
+    display: none;
+  }
+  .theme-icon-moon {
+    display: block;
+  }
+  [data-theme="light"] .theme-icon-sun {
+    display: block;
+  }
+  [data-theme="light"] .theme-icon-moon {
+    display: none;
   }
   </style>

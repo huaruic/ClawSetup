@@ -30,6 +30,14 @@ const baseUrl = lang === 'zh' ? '/zh' : '';
       <a href={`${baseUrl}#why`}>{t.nav.why}</a>
       <a href={`${baseUrl}#walkthrough`}>{t.nav.walkthrough}</a>
       <a href={`${baseUrl}#faq`}>{t.nav.faq}</a>
+      <button id="theme-toggle" type="button" class="nav-theme" aria-label="Toggle light/dark mode" title={lang === 'zh' ? '切换深色 / 浅色模式' : 'Toggle dark / light mode'}>
+        <span class="theme-icon theme-icon-sun" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        </span>
+        <span class="theme-icon theme-icon-moon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </span>
+      </button>
       {lang === 'en' ? (
         <a href="/zh" class="nav-lang">中文</a>
       ) : (
@@ -248,9 +256,13 @@ const baseUrl = lang === 'zh' ? '/zh' : '';
     height: 44px;
     border: 1px solid var(--line-strong);
     border-radius: 14px;
-    background: rgba(20, 10, 8, 0.6);
+    background: var(--brand-mark-bg);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     overflow: hidden;
+  }
+
+  [data-theme="light"] .brand-mark {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
 
   .brand-mark img {
@@ -297,11 +309,37 @@ const baseUrl = lang === 'zh' ? '/zh' : '';
     font-size: 0.9rem;
   }
 
+  .nav-theme {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--nav-cta-bg);
+    color: var(--accent-strong);
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .nav-theme .theme-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-theme:hover {
+    color: var(--accent-strong);
+    background: var(--line);
+    border-color: var(--line-strong);
+  }
+
   .nav-cta {
     padding: 10px 14px;
     border: 1px solid var(--line);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--nav-cta-bg);
     color: var(--text) !important;
   }
 
@@ -326,9 +364,9 @@ const baseUrl = lang === 'zh' ? '/zh' : '';
 
   .eyebrow span {
     padding: 8px 12px;
-    border: 1px solid rgba(255, 176, 136, 0.18);
+    border: 1px solid var(--eyebrow-border);
     border-radius: 999px;
-    background: rgba(255, 176, 136, 0.06);
+    background: var(--eyebrow-bg);
   }
 
   h1,
@@ -397,7 +435,7 @@ const baseUrl = lang === 'zh' ? '/zh' : '';
 
   .button-secondary {
     border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--button-secondary-bg);
     color: var(--text);
   }
 
@@ -453,7 +491,7 @@ const baseUrl = lang === 'zh' ? '/zh' : '';
     gap: 8px;
     padding: 16px 18px;
     border-bottom: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--panel-bar-bg);
   }
 
   .panel-bar span {
@@ -474,7 +512,7 @@ const baseUrl = lang === 'zh' ? '/zh' : '';
     padding: 16px 18px;
     border: 1px solid var(--line);
     border-radius: 20px;
-    background: rgba(20, 10, 8, 0.9);
+    background: var(--stat-card-bg);
     backdrop-filter: blur(16px);
   }
 
