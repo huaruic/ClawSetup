@@ -1,0 +1,87 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  lang?: string;
+}
+
+const {
+  title = 'ClawSetup | Run OpenClaw locally without terminal friction',
+  description = 'A beginner-friendly local OpenClaw desktop client for macOS. Install, configure, and verify your local setup through a fast visual flow.',
+  lang = 'en',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: dark;
+    --bg: #140a08;
+    --bg-elevated: rgba(20, 12, 10, 0.72);
+    --panel: rgba(15, 8, 6, 0.86);
+    --panel-strong: rgba(20, 12, 10, 0.96);
+    --line: rgba(255, 160, 120, 0.18);
+    --line-strong: rgba(255, 160, 120, 0.32);
+    --text: #f4f7fb;
+    --muted: #c4a99c;
+    --accent: #e85d4c;
+    --accent-strong: #ffb088;
+    --shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top, rgba(232, 93, 76, 0.12), transparent 28%),
+      radial-gradient(circle at 80% 20%, rgba(255, 176, 136, 0.08), transparent 22%),
+      linear-gradient(180deg, #0f0808 0%, #140a08 48%, #0a0605 100%);
+    color: var(--text);
+    font-family:
+      'Avenir Next',
+      'Segoe UI',
+      'Helvetica Neue',
+      Helvetica,
+      Arial,
+      sans-serif;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  a {
+    color: inherit;
+  }
+  </style>
