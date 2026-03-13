@@ -148,8 +148,8 @@ export default function ProviderPage() {
         <div className="space-y-1">
           <span className="text-sm font-medium">{t('provider.selectProvider')}</span>
           <Select
-            value={selectedId || undefined}
-            onValueChange={(val: string | null) => val && handleProviderChange(val)}
+            value={selectedId}
+            onValueChange={(val: string | null) => val != null && handleProviderChange(val)}
           >
             <SelectTrigger>
               <SelectValue placeholder={t('provider.selectPlaceholder')} />
