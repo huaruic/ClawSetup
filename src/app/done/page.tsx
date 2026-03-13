@@ -58,28 +58,28 @@ export default function DonePage() {
 
   return (
     <SetupShell currentStep={6} status={t('done.statusComplete')}>
-      <h1 className="text-2xl font-semibold tracking-tight">{t('done.title')}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t('done.title')}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{copy.description}</p>
 
-      <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-5 dark:border-green-800 dark:bg-green-900/20">
-        <h2 className="text-base font-medium text-green-800 dark:text-green-400">{copy.cardTitle}</h2>
-        <p className="mt-2 text-sm text-green-700 dark:text-green-400/80">
+      <div className="mt-6 rounded-xl border-2 border-emerald-600 bg-emerald-50 p-5 brutal-shadow-sm dark:border-emerald-500 dark:bg-emerald-950/40">
+        <h2 className="text-base font-bold text-emerald-800 dark:text-emerald-300">{copy.cardTitle}</h2>
+        <p className="mt-2 text-sm font-medium text-emerald-700 dark:text-emerald-400">
           {copy.cardDescription}
         </p>
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <div className="mt-4 rounded-xl border-2 border-destructive bg-destructive/10 px-3 py-2 text-sm font-bold text-destructive">
           {error}
         </div>
       )}
 
       <div className="mt-6 flex items-center justify-between">
-        <Link href="/feishu" className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent">{t('common.back')}</Link>
+        <Link href="/feishu" className="rounded-xl border-2 border-border bg-card px-4 py-2 text-sm font-bold text-foreground brutal-shadow-sm transition-all hover:brutal-shadow active:brutal-shadow-active">{t('common.back')}</Link>
         <button
           onClick={handleOpenDashboard}
           disabled={opening}
-          className="rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="rounded-xl border-2 border-border bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground brutal-shadow transition-all hover:brutal-shadow-hover active:brutal-shadow-active"
         >
           {opening ? t('done.opening') : t('done.openDashboard')}
         </button>

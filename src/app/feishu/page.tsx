@@ -333,18 +333,18 @@ export default function FeishuPage() {
   }
 
   const inputClass = (hasError: boolean) =>
-    `h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-2 bg-background ${
+    `h-10 w-full rounded-xl border-2 px-3 text-sm font-medium outline-none focus:ring-3 bg-card ${
       hasError
-        ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
-        : 'border-input focus:border-ring focus:ring-ring/20'
+        ? 'border-destructive focus:border-destructive focus:ring-destructive/30'
+        : 'border-border focus:border-ring focus:ring-ring/30'
     }`;
 
   return (
     <SetupShell currentStep={5} status={statusText}>
-      <h1 className="text-2xl font-semibold tracking-tight">{t('feishu.title')}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t('feishu.title')}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t('feishu.description')}</p>
 
-      <div className="mt-4 rounded-lg border border-border bg-muted/50 p-4">
+      <div className="mt-4 rounded-xl border-2 border-border bg-card p-4 brutal-shadow-sm">
         <div className="text-sm font-medium">{t('feishu.step1Title')}</div>
         <p className="mt-1 text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: t('feishu.step1Desc') }} />
 
@@ -388,26 +388,26 @@ export default function FeishuPage() {
           <button
             onClick={handleConnect}
             disabled={connecting}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl border-2 border-border bg-primary px-4 py-2 text-sm font-bold text-primary-foreground brutal-shadow transition-all hover:brutal-shadow-hover active:brutal-shadow-active disabled:cursor-not-allowed disabled:opacity-60"
           >
             {connecting ? t('feishu.connecting') : connectionReady ? t('feishu.reconnectFeishu') : t('feishu.connectFeishu')}
           </button>
           <button
             onClick={handleSkip}
-            className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent"
+            className="rounded-xl border-2 border-border bg-card px-4 py-2 text-sm font-bold text-foreground brutal-shadow-sm transition-all hover:brutal-shadow active:brutal-shadow-active"
           >
             {t('common.skip')}
           </button>
         </div>
 
         {connectionMessage && (
-          <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+          <div className="mt-4 rounded-xl border-2 border-emerald-600 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-300">
             {connectionMessage}
           </div>
         )}
       </div>
 
-      <div className={`mt-6 rounded-lg border p-4 ${connectionReady ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20' : 'border-border bg-muted/50 opacity-70'}`}>
+      <div className={`mt-6 rounded-xl border-2 p-4 ${connectionReady ? 'border-blue-600 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/40' : 'border-border/40 bg-muted opacity-70'}`}>
         <div className="text-sm font-medium">{t('feishu.step2Title')}</div>
         <p className="mt-1 text-sm text-muted-foreground">{t('feishu.step2Desc')}</p>
 
@@ -416,7 +416,7 @@ export default function FeishuPage() {
             href={`https://applink.feishu.cn/client/chat/open?openId=${botOpenId}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-xl border-2 border-blue-800 bg-blue-600 px-4 py-2 text-sm font-bold text-white brutal-shadow-sm transition-all hover:brutal-shadow active:brutal-shadow-active dark:border-blue-500"
           >
             {t('feishu.openBotChat')}
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
@@ -431,7 +431,7 @@ export default function FeishuPage() {
         )}
 
         {pairingRequest && !pairingApproved && (
-          <div className="mt-3 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-900/20">
+          <div className="mt-3 flex items-center justify-between rounded-xl border-2 border-amber-600 bg-amber-50 px-3 py-2 dark:border-amber-500 dark:bg-amber-950/40">
             <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-400">
               {autoApproving && (
                 <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-amber-400 border-t-amber-700 dark:border-amber-600 dark:border-t-amber-300" />
@@ -478,38 +478,38 @@ export default function FeishuPage() {
           <button
             onClick={handleApprovePairing}
             disabled={!connectionReady || approving || pairingApproved}
-            className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl border-2 border-border bg-foreground px-4 py-2 text-sm font-bold text-background brutal-shadow transition-all hover:brutal-shadow-hover active:brutal-shadow-active disabled:cursor-not-allowed disabled:opacity-50"
           >
             {approving ? t('feishu.approving') : pairingApproved ? t('feishu.paired') : t('feishu.approvePairing')}
           </button>
           <button
             onClick={() => void loadPairingRequest()}
             disabled={!connectionReady || approving}
-            className="rounded-md border border-border px-4 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl border-2 border-border bg-card px-4 py-2 text-sm font-bold text-foreground brutal-shadow-sm transition-all hover:brutal-shadow active:brutal-shadow-active disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t('feishu.refresh')}
           </button>
         </div>
 
         {pairingMessage && (
-          <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+          <div className="mt-4 rounded-xl border-2 border-emerald-600 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-300">
             {pairingMessage}
           </div>
         )}
       </div>
 
       {serverError && (
-        <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <div className="mt-4 rounded-xl border-2 border-destructive bg-destructive/10 px-3 py-2 text-sm font-bold text-destructive">
           {serverError}
         </div>
       )}
 
       <div className="mt-6 flex items-center justify-between">
-        <Link href="/onboarding" className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent">{t('common.back')}</Link>
+        <Link href="/onboarding" className="rounded-xl border-2 border-border bg-card px-4 py-2 text-sm font-bold text-foreground brutal-shadow-sm transition-all hover:brutal-shadow active:brutal-shadow-active">{t('common.back')}</Link>
         <button
           onClick={() => router.push('/done')}
           disabled={!pairingApproved}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-xl border-2 border-border bg-primary px-4 py-2 text-sm font-bold text-primary-foreground brutal-shadow transition-all hover:brutal-shadow-hover active:brutal-shadow-active disabled:cursor-not-allowed disabled:opacity-40"
         >
           {t('common.done')}
         </button>

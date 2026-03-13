@@ -141,12 +141,12 @@ export default function ProviderPage() {
 
   return (
     <SetupShell currentStep={3} status={statusText}>
-      <h1 className="text-2xl font-semibold tracking-tight">{t('provider.title')}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t('provider.title')}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t('provider.description')}</p>
 
       <div className="mt-6 space-y-4">
         <div className="space-y-1">
-          <span className="text-sm font-medium">{t('provider.selectProvider')}</span>
+          <span className="text-sm font-bold">{t('provider.selectProvider')}</span>
           <Select
             value={selectedId || undefined}
             onValueChange={(val: string | null) => val && handleProviderChange(val)}
@@ -165,7 +165,7 @@ export default function ProviderPage() {
 
         {selected && (
           <label className="block space-y-1">
-            <span className="text-sm font-medium">{t('provider.apiKey')}</span>
+            <span className="text-sm font-bold">{t('provider.apiKey')}</span>
             <input
               type="password"
               value={apiKey}
@@ -175,14 +175,14 @@ export default function ProviderPage() {
                 setValidationMessage('');
               }}
               placeholder={selected.placeholder}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+              className="h-10 w-full rounded-xl border-2 border-border bg-card px-3 text-sm font-medium outline-none focus:ring-3 focus:ring-ring/30"
             />
           </label>
         )}
 
         {selected?.regions && (
           <div className="space-y-1">
-            <span className="text-sm font-medium">{t('provider.region')}</span>
+            <span className="text-sm font-bold">{t('provider.region')}</span>
             <Select
               value={providerRegion}
               onValueChange={(val: string | null) => {
@@ -212,7 +212,7 @@ export default function ProviderPage() {
           <>
             {selected?.extra?.map((field) => (
               <label key={field.label} className="block space-y-1">
-                <span className="text-sm font-medium">{field.label}</span>
+                <span className="text-sm font-bold">{field.label}</span>
                 <input
                   type="text"
                   value={field.label === 'Base URL' ? customBaseUrl : customModelId}
@@ -223,7 +223,7 @@ export default function ProviderPage() {
                     setValidationMessage('');
                   }}
                   placeholder={field.placeholder}
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                  className="h-10 w-full rounded-xl border-2 border-border bg-card px-3 text-sm font-medium outline-none focus:ring-3 focus:ring-ring/30"
                 />
               </label>
             ))}
@@ -232,24 +232,24 @@ export default function ProviderPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>
+        <div className="mt-4 rounded-xl border-2 border-destructive bg-destructive/10 px-3 py-2 text-sm font-bold text-destructive">{error}</div>
       )}
 
       {saved && (
-        <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+        <div className="mt-4 rounded-xl border-2 border-emerald-600 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-300">
           {validationMessage || (supportsProviderValidation ? t('provider.validatedMessage') : t('provider.configuredMessage'))}
           {' '}{t('provider.applyNote')}
         </div>
       )}
 
       <div className="mt-6 flex items-center justify-between">
-        <Link href="/openclaw" className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent">{t('common.back')}</Link>
+        <Link href="/openclaw" className="rounded-xl border-2 border-border bg-card px-4 py-2 text-sm font-bold text-foreground brutal-shadow-sm transition-all hover:brutal-shadow active:brutal-shadow-active">{t('common.back')}</Link>
         <div className="flex gap-2">
           {!saved && (
             <button
               onClick={handleSave}
               disabled={!canSave || validating}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-xl border-2 border-border bg-primary px-4 py-2 text-sm font-bold text-primary-foreground brutal-shadow transition-all hover:brutal-shadow-hover active:brutal-shadow-active disabled:cursor-not-allowed disabled:opacity-40"
             >
               {validating ? t('provider.validating') : supportsProviderValidation ? t('provider.validateAndSave') : t('common.save')}
             </button>
@@ -257,7 +257,7 @@ export default function ProviderPage() {
           <button
             onClick={() => router.push('/onboarding')}
             disabled={!saved}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl border-2 border-border bg-primary px-4 py-2 text-sm font-bold text-primary-foreground brutal-shadow transition-all hover:brutal-shadow-hover active:brutal-shadow-active disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t('common.next')}
           </button>

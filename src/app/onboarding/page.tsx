@@ -26,10 +26,10 @@ type RuntimeStatusResponse = {
 };
 
 function stepIcon(status: StepStatus) {
-  if (status === 'success') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-  if (status === 'failed') return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
-  if (status === 'running') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-  return 'bg-muted text-muted-foreground';
+  if (status === 'success') return 'border-emerald-600 bg-emerald-200 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-800 dark:text-emerald-100';
+  if (status === 'failed') return 'border-red-600 bg-red-200 text-red-900 dark:border-red-500 dark:bg-red-800 dark:text-red-100';
+  if (status === 'running') return 'border-blue-600 bg-blue-200 text-blue-900 dark:border-blue-500 dark:bg-blue-800 dark:text-blue-100';
+  return 'border-border bg-muted text-muted-foreground';
 }
 
 function appendRuntimeOutput(addLog: (line: string) => void, label: string, data: RuntimeStatusResponse) {
@@ -292,13 +292,13 @@ export default function OnboardingPage() {
 
   return (
     <SetupShell currentStep={4} status={statusText}>
-      <h1 className="text-2xl font-semibold tracking-tight">{t('verify.title')}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t('verify.title')}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t('verify.description')}</p>
 
       <div className="mt-6 space-y-3">
         {pipeline.map((step, index) => (
-          <div key={index} className="flex items-center gap-3 rounded-lg border border-border px-4 py-3">
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${stepIcon(step.status)}`}>
+          <div key={index} className="flex items-center gap-3 rounded-xl border-2 border-border px-4 py-3 brutal-shadow-sm">
+            <span className={`flex h-6 w-6 items-center justify-center rounded-lg border-2 text-xs font-bold ${stepIcon(step.status)}`}>
               {step.status === 'success' ? '\u2713' : step.status === 'failed' ? '\u2717' : step.status === 'running' ? (
                 <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-blue-300 border-t-blue-700 dark:border-blue-600 dark:border-t-blue-300" />
               ) : index + 1}
@@ -307,27 +307,27 @@ export default function OnboardingPage() {
               <div className="text-sm">{step.label}</div>
               {step.detail && <div className="mt-0.5 text-xs text-muted-foreground">{step.detail}</div>}
             </div>
-            <span className={`rounded-md px-2 py-0.5 text-xs ${stepIcon(step.status)}`}>{stepStatusLabel(step.status)}</span>
+            <span className={`rounded-lg border-2 px-2 py-0.5 text-xs font-bold ${stepIcon(step.status)}`}>{stepStatusLabel(step.status)}</span>
           </div>
         ))}
       </div>
 
       {errorInfo && (
-        <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/10 p-3">
-          <div className="text-sm font-medium text-destructive">{errorInfo.message}</div>
+        <div className="mt-4 rounded-xl border-2 border-destructive bg-destructive/10 p-3">
+          <div className="text-sm font-bold text-destructive">{errorInfo.message}</div>
           <div className="mt-1 text-xs text-destructive/80">{errorInfo.suggestion}</div>
         </div>
       )}
 
       {allPassed && (
-        <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+        <div className="mt-4 rounded-xl border-2 border-emerald-600 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-300">
           {t('verify.allCompleted')}
         </div>
       )}
 
       {logs.length > 0 && (
-        <div className="mt-4 rounded-lg border border-border bg-slate-950 p-4 text-xs text-slate-200">
-          <div className="mb-2 font-medium text-slate-100">{t('verify.activity')}</div>
+        <div className="mt-4 rounded-xl border-2 border-border bg-zinc-950 p-4 text-xs text-zinc-200 brutal-shadow-sm">
+          <div className="mb-2 font-bold text-zinc-100">{t('verify.activity')}</div>
           <div className="max-h-48 overflow-auto space-y-1 font-mono">
             {logs.map((line, index) => (
               <div key={`${index}-${line.slice(0, 16)}`}>{line}</div>
@@ -337,13 +337,13 @@ export default function OnboardingPage() {
       )}
 
       <div className="mt-6 flex items-center justify-between">
-        <Link href="/provider" className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent">{t('common.back')}</Link>
+        <Link href="/provider" className="rounded-xl border-2 border-border bg-card px-4 py-2 text-sm font-bold text-foreground brutal-shadow-sm transition-all hover:brutal-shadow active:brutal-shadow-active">{t('common.back')}</Link>
 
         <div className="flex gap-2">
           {!allPassed && !running && (
             <button
               onClick={runPipeline}
-              className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-accent"
+              className="rounded-xl border-2 border-border bg-card px-4 py-2 text-sm font-bold text-foreground brutal-shadow-sm transition-all hover:brutal-shadow active:brutal-shadow-active"
             >
               {t('common.retry')}
             </button>
@@ -358,7 +358,7 @@ export default function OnboardingPage() {
           <button
             onClick={() => router.push('/feishu')}
             disabled={!allPassed}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl border-2 border-border bg-primary px-4 py-2 text-sm font-bold text-primary-foreground brutal-shadow transition-all hover:brutal-shadow-hover active:brutal-shadow-active disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t('common.next')}
           </button>

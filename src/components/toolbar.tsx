@@ -36,7 +36,7 @@ export function ThemeToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+      <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-lg border-2 border-border bg-card text-muted-foreground brutal-shadow-sm transition-all hover:brutal-shadow hover:text-foreground active:brutal-shadow-active">
         <Icon className="h-4 w-4" />
         <span className="sr-only">Toggle theme</span>
       </DropdownMenuTrigger>
@@ -57,7 +57,7 @@ export function LanguageToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+      <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-lg border-2 border-border bg-card text-muted-foreground brutal-shadow-sm transition-all hover:brutal-shadow hover:text-foreground active:brutal-shadow-active">
         <Languages className="h-4 w-4" />
         <span className="sr-only">Switch language</span>
       </DropdownMenuTrigger>

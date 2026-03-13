@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
+import { AnimatePresence, motion } from 'motion/react';
 import { useT } from '@/i18n/context';
 import { ThemeToggle, LanguageToggle } from '@/components/toolbar';
 
@@ -18,14 +20,19 @@ const steps: Step[] = [
 
 export function SetupShell({ currentStep, children, status = 'Not started' }: { currentStep: number; children: ReactNode; status?: string }) {
   const t = useT();
+  const pathname = usePathname();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-card">
+      <header className="border-b-2 border-border bg-card">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <div className="text-sm font-semibold tracking-tight">{t('shell.title')}</div>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold tracking-tight">{t('shell.title')}</span>
+            <span className="rounded-lg border-2 border-border bg-accent/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground">
+              {t('shell.subtitle')}
+            </span>
+          </div>
           <div className="flex items-center gap-1">
-            <span className="mr-2 text-xs text-muted-foreground">{t('shell.subtitle')}</span>
             <LanguageToggle />
             <ThemeToggle />
           </div>
@@ -33,7 +40,7 @@ export function SetupShell({ currentStep, children, status = 'Not started' }: { 
       </header>
 
       <main className="mx-auto grid max-w-6xl grid-cols-12 gap-6 px-6 py-8">
-        <section className="col-span-12 rounded-xl border border-border bg-card p-5 shadow-sm lg:col-span-8">
+        <section className="col-span-12 rounded-2xl border-2 border-border bg-card p-6 brutal-shadow lg:col-span-8">
           <div className="mb-6 flex items-center gap-2 overflow-x-auto">
             {steps.map((step, idx) => {
               const isAccessible = step.id <= currentStep;
@@ -42,67 +49,77 @@ export function SetupShell({ currentStep, children, status = 'Not started' }: { 
               return (
                 <div key={step.id} className="flex items-center gap-2 shrink-0">
                   {isAccessible ? (
-                    <Link href={step.href} className="flex items-center gap-2">
+                    <Link href={step.href} className="flex items-center gap-2 group">
                       <div
-                        className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg border-2 border-border text-xs font-bold transition-all ${
                           isCurrent
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'bg-primary text-primary-foreground brutal-shadow-sm'
                             : step.id < currentStep
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                              ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100'
                               : 'bg-muted text-muted-foreground'
                         }`}
                       >
                         {step.id < currentStep ? '\u2713' : step.id}
                       </div>
-                      <span className={`text-sm whitespace-nowrap ${isCurrent ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                      <span className={`text-sm whitespace-nowrap ${isCurrent ? 'font-bold text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
                         {t(step.titleKey)}
                       </span>
                     </Link>
                   ) : (
                     <div className="flex items-center gap-2 cursor-not-allowed">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground/50">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-border/40 bg-muted text-xs font-bold text-muted-foreground/40">
                         {step.id}
                       </div>
-                      <span className="text-sm whitespace-nowrap text-muted-foreground/50">{t(step.titleKey)}</span>
+                      <span className="text-sm whitespace-nowrap text-muted-foreground/40">{t(step.titleKey)}</span>
                     </div>
                   )}
-                  {idx < steps.length - 1 && <div className="h-px w-4 bg-border shrink-0" />}
+                  {idx < steps.length - 1 && <div className="h-0.5 w-4 bg-border shrink-0 rounded-full" />}
                 </div>
               );
             })}
           </div>
-          {children}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </section>
 
         <aside className="col-span-12 space-y-4 lg:col-span-4">
-          <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-            <h2 className="text-sm font-semibold">{t('shell.currentStatus')}</h2>
-            <div className="mt-3 rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground">{status}</div>
+          <div className="rounded-2xl border-2 border-border bg-card p-5 brutal-shadow-sm">
+            <h2 className="text-sm font-bold uppercase tracking-wider">{t('shell.currentStatus')}</h2>
+            <div className="mt-3 rounded-xl border-2 border-border bg-muted p-3 text-sm font-medium text-muted-foreground">{status}</div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-            <h2 className="text-sm font-semibold">{t('shell.setupProgress')}</h2>
+          <div className="rounded-2xl border-2 border-border bg-card p-5 brutal-shadow-sm">
+            <h2 className="text-sm font-bold uppercase tracking-wider">{t('shell.setupProgress')}</h2>
             <ul className="mt-3 space-y-2 text-sm">
               {steps.map((step) => {
                 const done = step.id < currentStep;
                 const active = step.id === currentStep;
                 return (
                   <li key={step.id} className="flex items-center gap-2">
-                    <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-md border-2 text-[10px] font-bold ${
                       done
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        ? 'border-emerald-600 bg-emerald-200 text-emerald-900 dark:border-emerald-400 dark:bg-emerald-800 dark:text-emerald-100'
                         : active
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                          : 'bg-muted text-muted-foreground/50'
+                          ? 'border-border bg-accent text-accent-foreground'
+                          : 'border-border/40 bg-muted text-muted-foreground/40'
                     }`}>
                       {done ? '\u2713' : step.id}
                     </span>
-                    <span className={
+                    <span className={`font-medium ${
                       done
                         ? 'text-muted-foreground line-through'
                         : active
-                          ? 'text-foreground font-medium'
-                          : 'text-muted-foreground/50'
-                    }>
+                          ? 'text-foreground'
+                          : 'text-muted-foreground/40'
+                    }`}>
                       {t(step.titleKey)}
                     </span>
                   </li>

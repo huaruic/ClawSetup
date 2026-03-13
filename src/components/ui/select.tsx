@@ -18,7 +18,7 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 data-disabled:cursor-not-allowed data-disabled:opacity-50 data-placeholder:text-muted-foreground",
+        "flex h-10 w-full items-center justify-between rounded-xl border-2 border-border bg-card px-3 text-sm font-medium outline-none transition-all brutal-shadow-sm focus:ring-3 focus:ring-ring/30 data-disabled:cursor-not-allowed data-disabled:opacity-50 data-placeholder:text-muted-foreground hover:brutal-shadow",
         className
       )}
       {...props}
@@ -57,12 +57,12 @@ function SelectPopup({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
         className="isolate z-50 outline-none"
-        sideOffset={4}
+        sideOffset={6}
       >
         <SelectPrimitive.Popup
           data-slot="select-popup"
           className={cn(
-            "max-h-(--available-height) min-w-[var(--anchor-width)] origin-(--transform-origin) overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "max-h-(--available-height) min-w-[var(--anchor-width)] origin-(--transform-origin) overflow-y-auto rounded-xl border-2 border-border bg-card p-1 text-foreground brutal-shadow outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           {...props}
@@ -83,7 +83,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+        "relative flex w-full cursor-default items-center gap-1.5 rounded-lg py-1.5 pr-8 pl-2 text-sm font-medium outline-hidden select-none data-highlighted:bg-accent/30 data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
         className
       )}
       {...props}
