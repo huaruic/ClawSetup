@@ -31,6 +31,15 @@ next-env.d.ts
 # legacy backend build output
 backend/
 
+# Tauri
+src-tauri/target/
+src-tauri/binaries/
+src-tauri/resources/node-runtime/
+*.dmg
+*.app
+*.app.tar.gz
+*.zip
+
 # internal docs (not for open source)
 prd.md
 PROGRESS.md
@@ -39,3 +48,11 @@ PROGRESS.md
 AGENTS.md
 VERIFY_DEBUG_GUIDE.md
 diagnose-verify.js
+
+capture-screenshots.mjs
+clawsetup-pitch.html
+clawsetup-website/
+prd_ref.md
+public/readme/qr-wechat.jpg
+public/readme/qr-xiaohongshu.jpg
+website/

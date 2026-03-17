@@ -10,6 +10,8 @@ Install, configure, and run OpenClaw locally through a simple visual interface.
 
 [中文文档](./README.zh-CN.md)
 
+[Download Latest Release](https://github.com/huaruic/clawsetup/releases/latest)
+
 > One-click setup. No terminal required. Built for beginners.
 
 ![ClawSetup Welcome](./public/readme/01-welcome.png)
@@ -33,7 +35,8 @@ ClawSetup turns that experience into a guided visual flow.
 
 ## What You Get
 
-- One-click dependency installation
+- A packaged macOS desktop app
+- Bundled OpenClaw runtime for local setup
 - Visual setup flow for beginners
 - Feishu provider configuration
 - Local runtime launch and verification
@@ -129,27 +132,42 @@ After pairing, users can verify the result directly in Feishu and confirm that t
 
 ![Feishu Chat Result](./public/readme/11-feishu-chat.png)
 
-## Quick Start
+## Download
+
+Download the latest macOS build from GitHub Releases:
+
+[Latest Release](https://github.com/huaruic/clawsetup/releases/latest)
+
+Install on macOS:
+
+1. Download the latest `.dmg`
+2. Open the disk image
+3. Drag `ClawSetup.app` into `Applications`
+4. Launch `ClawSetup`
+
+## Build From Source
 
 ```bash
 git clone https://github.com/huaruic/clawsetup.git
 cd clawsetup
 npm install
-npm run dev
+npm run tauri:dev
 ```
 
-Then open:
+To build a release package locally:
 
 ```text
-http://localhost:3000
+npm run desktop:build
 ```
+
+Maintainers: see [RELEASING.md](./RELEASING.md) for the tag-to-release workflow.
 
 ## Current Scope
 
 ClawSetup currently focuses on:
 - macOS only
 - local visual setup
-- one-click dependency installation
+- packaged desktop distribution via GitHub Releases
 - Feishu as the first provider integration
 - local OpenClaw runtime launch
 - lightweight dashboard capabilities
@@ -208,7 +226,6 @@ It is the early-stage experience of a future OpenClaw Desktop Client:
 ### Later
 
 - more providers
-- desktop packaging
 - deeper OpenClaw management workflows
 - cross-platform exploration
 
@@ -240,7 +257,9 @@ This project exists to make OpenClaw more approachable through a visual, guided,
 
 ```bash
 npm install
-npm run dev
+npm run tauri:dev
+npm run desktop:prepare
+npm run desktop:build
 npm run lint
 npm run build
 ```

@@ -10,6 +10,8 @@
 
 [English](./README.md)
 
+[下载最新 Release](https://github.com/huaruic/clawsetup/releases/latest)
+
 > 一键安装，无需终端，专为新手设计。
 
 ![ClawSetup 欢迎页](./public/readme/01-welcome.png)
@@ -33,7 +35,8 @@ ClawSetup 就是为了解决这个问题而存在的。
 
 ## 你能获得什么
 
-- 一键安装所需依赖
+- 可直接安装的 macOS 桌面应用
+- 随应用打包的 OpenClaw 本地 runtime
 - 面向新手的可视化 setup 流程
 - 飞书 provider 配置
 - 本地运行启动与验证
@@ -129,27 +132,42 @@ ClawSetup 会展示当前配对进度和审批状态，避免用户反复切换�
 
 ![飞书中的成功消息](./public/readme/11-feishu-chat.png)
 
-## 快速开始
+## 下载与安装
+
+从 GitHub Releases 下载最新 macOS 安装包：
+
+[最新 Release](https://github.com/huaruic/clawsetup/releases/latest)
+
+macOS 安装步骤：
+
+1. 下载最新 `.dmg`
+2. 打开磁盘镜像
+3. 将 `ClawSetup.app` 拖入 `Applications`
+4. 启动 `ClawSetup`
+
+## 从源码构建
 
 ```bash
 git clone https://github.com/huaruic/clawsetup.git
 cd clawsetup
 npm install
-npm run dev
+npm run tauri:dev
 ```
 
-然后打开：
+如需本地构建 release 包：
 
 ```text
-http://localhost:3000
+npm run desktop:build
 ```
+
+维护者发布流程见 [RELEASING.md](./RELEASING.md)。
 
 ## 当前范围
 
 ClawSetup 当前重点聚焦于：
 - 仅支持 macOS
 - 本地可视化 setup
-- 一键安装依赖
+- 通过 GitHub Releases 分发桌面安装包
 - 以飞书作为首个 provider 集成
 - 本地 OpenClaw 运行启动
 - 轻量 dashboard 能力
@@ -208,7 +226,6 @@ ClawSetup 不只是一个 setup helper。
 ### 后续阶段
 
 - 更多 provider 支持
-- 桌面应用封装
 - 更深的 OpenClaw 本地管理能力
 - 跨平台探索
 
@@ -240,7 +257,9 @@ ClawSetup 的起点其实很简单：
 
 ```bash
 npm install
-npm run dev
+npm run tauri:dev
+npm run desktop:prepare
+npm run desktop:build
 npm run lint
 npm run build
 ```
