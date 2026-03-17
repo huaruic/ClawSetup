@@ -1,6 +1,6 @@
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+'use client';
+
+import { readJsonFile } from './tauri-fs';
 
 export type FeishuPairingRequest = {
   id: string;
@@ -17,28 +17,25 @@ type FeishuPairingStore = {
   requests?: FeishuPairingRequest[];
 };
 
-const FEISHU_PAIRING_FILE = path.join(os.homedir(), '.openclaw', 'credentials', 'feishu-pairing.json');
+const PAIRING_PATH = '.openclaw/credentials/feishu-pairing.json';
 
-export function getFeishuPairingFilePath() {
-  return FEISHU_PAIRING_FILE;
+export async function loadFeishuPairingRequests(): Promise<FeishuPairingRequest[]> {
+  const raw = await readJsonFile<FeishuPairingStore>(PAIRING_PATH);
+  return Array.isArray(raw?.requests) ? raw.requests : [];
 }
 
-export function loadFeishuPairingRequests() {
-  if (!fs.existsSync(FEISHU_PAIRING_FILE)) {
-    return [];
-  }
-
-  const raw = JSON.parse(fs.readFileSync(FEISHU_PAIRING_FILE, 'utf-8')) as FeishuPairingStore;
-  return Array.isArray(raw.requests) ? raw.requests : [];
+export async function getLatestFeishuPairingRequest(): Promise<FeishuPairingRequest | null> {
+  const requests = await loadFeishuPairingRequests();
+  return (
+    requests
+      .slice()
+      .sort((left, right) => Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt))[0] ?? null
+  );
 }
 
-export function getLatestFeishuPairingRequest() {
-  const requests = loadFeishuPairingRequests();
-  return requests
-    .slice()
-    .sort((left, right) => Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt))[0] ?? null;
-}
-
-export function findFeishuPairingRequestByCode(code: string) {
-  return loadFeishuPairingRequests().find((request) => request.code === code) ?? null;
+export async function findFeishuPairingRequestByCode(
+  code: string,
+): Promise<FeishuPairingRequest | null> {
+  const requests = await loadFeishuPairingRequests();
+  return requests.find((request) => request.code === code) ?? null;
 }

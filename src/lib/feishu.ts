@@ -1,7 +1,8 @@
-import os from 'node:os';
-import path from 'node:path';
-import fs from 'node:fs';
+'use client';
+
 import { z } from 'zod';
+import { fetch } from '@tauri-apps/plugin-http';
+import { readJsonFile, writeJsonFile } from './tauri-fs';
 
 export const feishuSchema = z.object({
   appId: z.string().min(4),
@@ -18,32 +19,21 @@ type FeishuApiResponse = {
   tenant_access_token?: string;
 };
 
-const CONFIG_DIR = path.join(os.homedir(), '.clawsetup');
-const CONFIG_FILE = path.join(CONFIG_DIR, 'feishu.json');
+const CONFIG_PATH = '.clawsetup/feishu.json';
 
-export function loadFeishuConfig(): FeishuConfig | null {
+export async function loadFeishuConfig(): Promise<FeishuConfig | null> {
   try {
-    if (fs.existsSync(CONFIG_FILE)) {
-      const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
-      const parsed = feishuSchema.safeParse(raw);
-      if (parsed.success) return parsed.data;
-    }
-  } catch { /* ignore corrupt file */ }
-  return null;
+    const raw = await readJsonFile<Record<string, unknown>>(CONFIG_PATH);
+    if (!raw) return null;
+    const parsed = feishuSchema.safeParse(raw);
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
 }
 
-export function saveFeishuConfig(config: FeishuConfig) {
-  fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
-}
-
-// Always read from disk to avoid cross-module state issues in Next.js dev mode
-export function getFeishuConfig(): FeishuConfig | null {
-  return loadFeishuConfig();
-}
-
-export function setFeishuConfig(config: FeishuConfig) {
-  saveFeishuConfig(config);
+export async function saveFeishuConfig(config: FeishuConfig): Promise<void> {
+  await writeJsonFile(CONFIG_PATH, config);
 }
 
 export async function exchangeFeishuTenantToken(config: FeishuCredentials) {
