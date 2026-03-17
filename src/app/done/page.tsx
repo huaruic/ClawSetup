@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { SetupShell } from '@/components/setup-shell';
 import { useT } from '@/i18n/context';
 import { loadOnboardingState } from '@/lib/onboarding-state';
+import { getDashboardUrl } from '@/lib/api';
+import { open } from '@tauri-apps/plugin-shell';
 
 export default function DonePage() {
   const t = useT();
@@ -40,15 +42,14 @@ export default function DonePage() {
     setError('');
 
     try {
-      const resp = await fetch('/api/runtime/dashboard-url');
-      const data = await resp.json();
+      const data = await getDashboardUrl();
 
       if (!data.ok || !data.url) {
         setError(data.error || 'Failed to open OpenClaw Dashboard');
         return;
       }
 
-      window.open(data.url, '_blank', 'noopener,noreferrer');
+      await open(data.url);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to open OpenClaw Dashboard');
     } finally {

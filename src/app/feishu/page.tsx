@@ -6,6 +6,14 @@ import { useRouter } from 'next/navigation';
 import { SetupShell } from '@/components/setup-shell';
 import { useT } from '@/i18n/context';
 import { loadOnboardingState, updateOnboardingState } from '@/lib/onboarding-state';
+import {
+  previewConfig,
+  validateFeishuCredentials,
+  applyFeishuConfig,
+  verifyRuntime,
+  getLatestPairing,
+  approvePairing,
+} from '@/lib/api';
 
 type FieldErrors = {
   appId?: string;
@@ -51,15 +59,13 @@ export default function FeishuPage() {
 
   async function loadPairingRequest() {
     try {
-      const response = await fetch('/api/feishu/pairing', { cache: 'no-store' });
-      const data = await response.json();
+      const data = await getLatestPairing();
       if (!data.ok) return;
 
       const req = data.request ?? null;
       setPairingRequest(req);
       if (!req?.code) return;
 
-      // Auto-fill if user hasn't manually typed a different code
       setPairingCode((prev) => {
         if (!prev || prev === autoFilledCode) {
           setAutoFilledCode(req.code);
@@ -68,17 +74,11 @@ export default function FeishuPage() {
         return prev;
       });
 
-      // Auto-approve the detected code
       if (!autoApproving && !pairingApproved && !approving) {
         setAutoApproving(true);
         try {
-          const approveResp = await fetch('/api/feishu/pairing/approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: req.code }),
-          });
-          const approveData = await approveResp.json();
-          if (approveResp.ok && approveData.ok) {
+          const approveData = await approvePairing(req.code);
+          if (approveData.ok) {
             setPairingCode(req.code);
             setPairingApproved(true);
             setPairingMessage(approveData.message || 'Pairing approved!');
@@ -98,7 +98,7 @@ export default function FeishuPage() {
             }));
           }
         } catch {
-          // Auto-approve failed silently, user can still approve manually
+          // Auto-approve failed silently
         } finally {
           setAutoApproving(false);
         }
@@ -124,22 +124,24 @@ export default function FeishuPage() {
       return;
     }
 
-    fetch('/api/config/preview')
-      .then((response) => response.json())
-      .then(async (data) => {
+    (async () => {
+      try {
+        const data = await previewConfig();
         if (data.ok && data.config?.appId) {
           setAppId(data.config.appId);
-          const verifyResponse = await fetch('/api/runtime/verify', { method: 'POST' });
-          const verifyData = await verifyResponse.json();
+          const verifyData = await verifyRuntime();
           if (verifyData.ok) {
             setConnectionReady(true);
             setConnectionMessage(t('feishu.alreadyConnected'));
             void loadPairingRequest();
           }
         }
-      })
-      .catch(() => {})
-      .finally(() => setLoadingConfig(false));
+      } catch {
+        // ignore
+      } finally {
+        setLoadingConfig(false);
+      }
+    })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -181,18 +183,11 @@ export default function FeishuPage() {
         connectionReady: false,
         pairingApproved: false,
       },
-      done: {
-        status: 'pending',
-      },
+      done: { status: 'pending' },
     }));
     try {
-      const validationResponse = await fetch('/api/config/feishu/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-      const validationData = await validationResponse.json();
-      if (!validationResponse.ok || !validationData.ok) {
+      const validationData = await validateFeishuCredentials(values);
+      if (!validationData.ok) {
         setServerError(validationData.error || 'Failed to validate Feishu credentials');
         return;
       }
@@ -201,20 +196,14 @@ export default function FeishuPage() {
         setBotOpenId(validationData.botOpenId);
       }
 
-      const applyResponse = await fetch('/api/config/apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-      const applyData = await applyResponse.json();
-      if (!applyResponse.ok || !applyData.ok) {
+      const applyData = await applyFeishuConfig(values);
+      if (!applyData.ok) {
         setServerError(applyData.error || 'Failed to apply Feishu configuration');
         return;
       }
 
-      const verifyResponse = await fetch('/api/runtime/verify', { method: 'POST' });
-      const verifyData = await verifyResponse.json();
-      if (!verifyResponse.ok || !verifyData.ok) {
+      const verifyData = await verifyRuntime();
+      if (!verifyData.ok) {
         setServerError(verifyData.errorMessage || 'Feishu channel verification failed');
         updateOnboardingState((current) => ({
           ...current,
@@ -271,13 +260,8 @@ export default function FeishuPage() {
 
     setApproving(true);
     try {
-      const response = await fetch('/api/feishu/pairing/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.ok) {
+      const data = await approvePairing(code);
+      if (!data.ok) {
         setServerError(data.error || 'Failed to approve Pairing Code');
         return;
       }

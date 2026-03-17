@@ -47,7 +47,10 @@
     "nodeNotDetectedHint": "OpenClaw installation won't be affected, but Node.js is required at runtime.",
     "downloadNode": "Download Node.js",
     "recheck": "Re-check",
-    "rechecking": "Checking..."
+    "rechecking": "Checking...",
+    "bundledReady": "Bundled (ready)",
+    "bundledInfo": "OpenClaw is bundled with this app — no separate installation needed.",
+    "envReady": "Environment is ready — you can proceed."
   },
   "openclaw": {
     "title": "OpenClaw CLI",
@@ -104,6 +107,9 @@
     "setupNeedsInstall": "OpenClaw is not configured yet. Configuring it now.",
     "setupRunning": "Configuring OpenClaw...",
     "setupAlreadyReady": "OpenClaw is already configured locally",
+    "syncingProvider": "Syncing selected AI provider to local OpenClaw config...",
+    "providerSynced": "AI provider configuration synced.",
+    "providerSyncFailed": "Failed to sync AI provider configuration",
     "setupFailed": "OpenClaw configuration failed",
     "setupFailedSuggestion": "Check your AI provider configuration and try again.",
     "setupRetrySuggestion": "Retry to reconfigure OpenClaw.",

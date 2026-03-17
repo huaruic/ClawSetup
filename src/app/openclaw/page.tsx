@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { SetupShell } from '@/components/setup-shell';
 import { useT } from '@/i18n/context';
 import { updateOnboardingState } from '@/lib/onboarding-state';
+import { getRuntimeStatus, installOpenClaw } from '@/lib/api';
 
 type Status = 'checking' | 'installed' | 'installing' | 'success' | 'failed';
 
@@ -31,32 +32,6 @@ export default function OpenClawInstallPage() {
 
   const canContinue = status === 'installed' || status === 'success';
 
-  const waitForTask = useCallback((taskId: string): Promise<'success' | 'failed'> => {
-    return new Promise((resolve) => {
-      const es = new EventSource(`/api/tasks/${taskId}/stream`);
-      let resolved = false;
-
-      es.addEventListener('log', (event) => {
-        const data = JSON.parse(event.data);
-        if (data.line) addLog(data.line);
-      });
-
-      es.addEventListener('status', (event) => {
-        const data = JSON.parse(event.data);
-        if (data.status === 'success' || data.status === 'failed') {
-          resolved = true;
-          es.close();
-          resolve(data.status);
-        }
-      });
-
-      es.onerror = () => {
-        es.close();
-        if (!resolved) resolve('failed');
-      };
-    });
-  }, [addLog]);
-
   const runInstall = useCallback(async () => {
     setStatus('checking');
     setLogs([]);
@@ -64,8 +39,7 @@ export default function OpenClawInstallPage() {
 
     try {
       addLog(t('openclaw.checkingCli'));
-      const statusResp = await fetch('/api/runtime/status');
-      const statusData = await statusResp.json();
+      const statusData = await getRuntimeStatus();
 
       if (statusData.installed) {
         addLog(t('openclaw.alreadyInstalled'));
@@ -80,16 +54,7 @@ export default function OpenClawInstallPage() {
       addLog(t('openclaw.startingInstall'));
       setStatus('installing');
 
-      const installResp = await fetch('/api/install/openclaw', { method: 'POST' });
-      const installData = await installResp.json();
-
-      if (!installData.taskId) {
-        setStatus('failed');
-        setError(installData.error || t('openclaw.installFailed'));
-        return;
-      }
-
-      const result = await waitForTask(installData.taskId);
+      const result = await installOpenClaw(addLog);
 
       if (result === 'failed') {
         setStatus('failed');
@@ -103,8 +68,7 @@ export default function OpenClawInstallPage() {
 
       // Verify installation
       addLog(t('openclaw.verifyingInstall'));
-      const verifyResp = await fetch('/api/runtime/status');
-      const verifyData = await verifyResp.json();
+      const verifyData = await getRuntimeStatus();
 
       if (verifyData.installed) {
         addLog(t('openclaw.installSuccess'));
@@ -125,7 +89,7 @@ export default function OpenClawInstallPage() {
       setStatus('failed');
       setError(e instanceof Error ? e.message : t('openclaw.installFailed'));
     }
-  }, [addLog, waitForTask, t]);
+  }, [addLog, t]);
 
   useEffect(() => {
     if (!hasAutoRun.current) {

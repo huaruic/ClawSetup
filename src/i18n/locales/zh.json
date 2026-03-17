@@ -47,7 +47,10 @@
     "nodeNotDetectedHint": "后续安装 OpenClaw 不受影响，但运行时需要 Node.js。",
     "downloadNode": "下载 Node.js",
     "recheck": "重新检测",
-    "rechecking": "检测中..."
+    "rechecking": "检测中...",
+    "bundledReady": "已内置（就绪）",
+    "bundledInfo": "OpenClaw 已内置于本应用中，无需额外安装。",
+    "envReady": "环境已就绪，可以继续。"
   },
   "openclaw": {
     "title": "OpenClaw CLI",
@@ -104,6 +107,9 @@
     "setupNeedsInstall": "OpenClaw 尚未配置，正在进行配置。",
     "setupRunning": "正在配置 OpenClaw...",
     "setupAlreadyReady": "检测到 OpenClaw 已在本地配置就绪",
+    "syncingProvider": "正在把当前选择的 AI 提供商同步到本地 OpenClaw 配置...",
+    "providerSynced": "AI 提供商配置已同步。",
+    "providerSyncFailed": "同步 AI 提供商配置失败",
     "setupFailed": "OpenClaw 配置失败",
     "setupFailedSuggestion": "请检查 AI 提供商配置后重试。",
     "setupRetrySuggestion": "点击重试会重新配置 OpenClaw。",

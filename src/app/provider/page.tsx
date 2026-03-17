@@ -8,6 +8,7 @@ import { Select, SelectTrigger, SelectValue, SelectIcon, SelectPopup, SelectItem
 import { providers } from '@/lib/providers';
 import { useT } from '@/i18n/context';
 import { loadOnboardingState, updateOnboardingState } from '@/lib/onboarding-state';
+import { validateProvider } from '@/lib/api';
 
 export default function ProviderPage() {
   const router = useRouter();
@@ -47,9 +48,7 @@ export default function ProviderPage() {
   useEffect(() => {
     const state = loadOnboardingState();
     const config = state.provider.config;
-    if (!config?.providerId) {
-      return;
-    }
+    if (!config?.providerId) return;
 
     setSelectedId(config.providerId);
     setApiKey(config.apiKey);
@@ -93,13 +92,8 @@ export default function ProviderPage() {
 
     setValidating(true);
     try {
-      const response = await fetch('/api/provider/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.ok) {
+      const data = await validateProvider(config);
+      if (!data.ok) {
         setError(data.error || 'Provider validation failed');
         setSaved(false);
         return;

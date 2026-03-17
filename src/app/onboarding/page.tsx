@@ -6,6 +6,15 @@ import { useRouter } from 'next/navigation';
 import { SetupShell } from '@/components/setup-shell';
 import { useT } from '@/i18n/context';
 import { loadOnboardingState, updateOnboardingState } from '@/lib/onboarding-state';
+import {
+  getRuntimeStatus,
+  runOnboarding,
+  getDashboardUrl,
+  resetChannels,
+  syncProviderConfig,
+  type RuntimeStatus,
+} from '@/lib/api';
+import { open } from '@tauri-apps/plugin-shell';
 
 type StepStatus = 'pending' | 'running' | 'success' | 'failed';
 
@@ -15,16 +24,6 @@ type PipelineStep = {
   detail?: string;
 };
 
-type RuntimeStatusResponse = {
-  ok?: boolean;
-  installed?: boolean;
-  ready?: boolean;
-  summary?: string;
-  status?: string;
-  output?: string;
-  error?: string;
-};
-
 function stepIcon(status: StepStatus) {
   if (status === 'success') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
   if (status === 'failed') return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
@@ -32,18 +31,13 @@ function stepIcon(status: StepStatus) {
   return 'bg-muted text-muted-foreground';
 }
 
-function appendRuntimeOutput(addLog: (line: string) => void, label: string, data: RuntimeStatusResponse) {
+function appendRuntimeOutput(addLog: (line: string) => void, label: string, data: RuntimeStatus) {
   addLog(label);
   if (data.summary) addLog(data.summary);
-
   const rawOutput = typeof data.output === 'string' && data.output.trim().length > 0
     ? data.output
-    : typeof data.status === 'string'
-      ? data.status
-      : '';
-
+    : '';
   if (!rawOutput) return;
-
   for (const line of rawOutput.split('\n').map((value) => value.trim()).filter(Boolean)) {
     addLog(`  ${line}`);
   }
@@ -81,32 +75,6 @@ export default function OnboardingPage() {
     setLogs((prev) => [...prev, line]);
   }, []);
 
-  const waitForTask = useCallback((taskId: string): Promise<'success' | 'failed'> => {
-    return new Promise((resolve) => {
-      const es = new EventSource(`/api/tasks/${taskId}/stream`);
-      let resolved = false;
-
-      es.addEventListener('log', (event) => {
-        const data = JSON.parse(event.data);
-        if (data.line) addLog(data.line);
-      });
-
-      es.addEventListener('status', (event) => {
-        const data = JSON.parse(event.data);
-        if (data.status === 'success' || data.status === 'failed') {
-          resolved = true;
-          es.close();
-          resolve(data.status);
-        }
-      });
-
-      es.onerror = () => {
-        es.close();
-        if (!resolved) resolve('failed');
-      };
-    });
-  }, [addLog]);
-
   const runPipeline = useCallback(async () => {
     setRunning(true);
     setLogs([]);
@@ -133,33 +101,40 @@ export default function OnboardingPage() {
 
     updateOnboardingState((current) => ({
       ...current,
-      onboarding: {
-        status: 'running',
-      },
-      done: {
-        status: 'pending',
-      },
+      onboarding: { status: 'running' },
+      done: { status: 'pending' },
     }));
 
     try {
       addLog(t('verify.setupChecking'));
-      const statusResponse = await fetch('/api/runtime/status');
-      const statusData = await statusResponse.json() as RuntimeStatusResponse;
+      const statusData = await getRuntimeStatus();
       appendRuntimeOutput(addLog, t('verify.initialStatusLog'), statusData);
 
-      if (statusResponse.ok && statusData.ok && statusData.ready) {
+      if (statusData.ok && statusData.ready) {
+        addLog(t('verify.syncingProvider'));
+        const syncResult = await syncProviderConfig(providerConfig);
+        if (!syncResult.ok) {
+          const message = syncResult.error || t('verify.providerSyncFailed');
+          updateStep(0, { status: 'failed', detail: message });
+          setErrorInfo({ message, suggestion: t('verify.setupFailedSuggestion') });
+          updateOnboardingState((current) => ({
+            ...current,
+            onboarding: { status: 'failed', message },
+          }));
+          setRunning(false);
+          return;
+        }
+
+        addLog(t('verify.providerSynced'));
         addLog(t('verify.resettingChannels'));
-        await fetch('/api/config/reset-channels', { method: 'POST' });
+        await resetChannels();
         addLog(t('verify.channelsReset'));
 
         updateStep(0, { status: 'success', detail: t('verify.setupAlreadyReady') });
         setAllPassed(true);
         updateOnboardingState((current) => ({
           ...current,
-          onboarding: {
-            status: 'passed',
-            message: t('verify.setupAlreadyReady'),
-          },
+          onboarding: { status: 'passed', message: t('verify.setupAlreadyReady') },
         }));
         setRunning(false);
         return;
@@ -169,61 +144,32 @@ export default function OnboardingPage() {
       updateStep(0, { status: 'running', detail: t('verify.setupRunning') });
       addLog(t('verify.setupRunning'));
 
-      const onboardResp = await fetch('/api/onboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(providerConfig),
-      });
-      const onboardData = await onboardResp.json();
+      const result = await runOnboarding(providerConfig, addLog);
 
-      if (!onboardData.taskId) {
-        updateStep(0, { status: 'failed', detail: onboardData.error || t('verify.setupFailed') });
-        setErrorInfo({ message: onboardData.error || t('verify.setupFailed'), suggestion: t('verify.setupFailedSuggestion') });
+      if (result === 'failed') {
+        updateStep(0, { status: 'failed', detail: t('verify.setupFailed') });
+        setErrorInfo({ message: t('verify.setupFailed'), suggestion: t('verify.setupFailedSuggestion') });
         updateOnboardingState((current) => ({
           ...current,
-          onboarding: {
-            status: 'failed',
-            message: onboardData.error || t('verify.setupFailed'),
-          },
+          onboarding: { status: 'failed', message: t('verify.setupFailed') },
         }));
         setRunning(false);
         return;
       }
 
-      if (onboardData.status !== 'success') {
-        const result = await waitForTask(onboardData.taskId);
-        if (result === 'failed') {
-          updateStep(0, { status: 'failed', detail: t('verify.setupFailed') });
-          setErrorInfo({ message: t('verify.setupFailed'), suggestion: t('verify.setupFailedSuggestion') });
-          updateOnboardingState((current) => ({
-            ...current,
-            onboarding: {
-              status: 'failed',
-              message: t('verify.setupFailed'),
-            },
-          }));
-          setRunning(false);
-          return;
-        }
-      }
-
       addLog(t('verify.gatewayChecking'));
-      const finalStatusResponse = await fetch('/api/runtime/status');
-      const finalStatusData = await finalStatusResponse.json() as RuntimeStatusResponse;
+      const finalStatusData = await getRuntimeStatus();
       appendRuntimeOutput(addLog, t('verify.finalStatusLog'), finalStatusData);
 
-      if (!finalStatusResponse.ok || !finalStatusData.ok || !finalStatusData.ready) {
-        updateStep(0, { status: 'failed', detail: finalStatusData.summary || finalStatusData.error || t('verify.gatewayCheckFailed') });
+      if (!finalStatusData.ok || !finalStatusData.ready) {
+        updateStep(0, { status: 'failed', detail: finalStatusData.summary || t('verify.gatewayCheckFailed') });
         setErrorInfo({
-          message: finalStatusData.summary || finalStatusData.error || t('verify.gatewayCheckFailed'),
+          message: finalStatusData.summary || t('verify.gatewayCheckFailed'),
           suggestion: t('verify.setupRetrySuggestion'),
         });
         updateOnboardingState((current) => ({
           ...current,
-          onboarding: {
-            status: 'failed',
-            message: finalStatusData.summary || finalStatusData.error || t('verify.gatewayCheckFailed'),
-          },
+          onboarding: { status: 'failed', message: finalStatusData.summary || t('verify.gatewayCheckFailed') },
         }));
         setRunning(false);
         return;
@@ -233,10 +179,7 @@ export default function OnboardingPage() {
       setAllPassed(true);
       updateOnboardingState((current) => ({
         ...current,
-        onboarding: {
-          status: 'passed',
-          message: t('verify.gatewayReady'),
-        },
+        onboarding: { status: 'passed', message: t('verify.gatewayReady') },
       }));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : t('verify.setupFailed');
@@ -244,17 +187,14 @@ export default function OnboardingPage() {
       setErrorInfo({ message, suggestion: t('verify.ensureServer') });
       updateOnboardingState((current) => ({
         ...current,
-        onboarding: {
-          status: 'failed',
-          message,
-        },
+        onboarding: { status: 'failed', message },
       }));
       setRunning(false);
       return;
     }
 
     setRunning(false);
-  }, [addLog, updateStep, waitForTask, t]);
+  }, [addLog, updateStep, t]);
 
   useEffect(() => {
     if (!hasAutoRun.current) {
@@ -270,8 +210,7 @@ export default function OnboardingPage() {
   async function handleOpenOpenClaw() {
     setOpeningDashboard(true);
     try {
-      const response = await fetch('/api/runtime/dashboard-url');
-      const data = await response.json();
+      const data = await getDashboardUrl();
       if (!data.ok || !data.url) {
         setErrorInfo({
           message: data.error || t('verify.gatewayCheckFailed'),
@@ -279,7 +218,7 @@ export default function OnboardingPage() {
         });
         return;
       }
-      window.open(data.url, '_blank', 'noopener,noreferrer');
+      await open(data.url);
     } catch (error: unknown) {
       setErrorInfo({
         message: error instanceof Error ? error.message : t('verify.gatewayCheckFailed'),
